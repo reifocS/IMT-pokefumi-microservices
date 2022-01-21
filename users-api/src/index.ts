@@ -1,6 +1,7 @@
 import {Prisma, PrismaClient} from '@prisma/client'
 import express from 'express'
 import bodyParser from "body-parser";
+import axios from "axios"
 
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
@@ -31,6 +32,10 @@ app.use((err: { name: string; status: any; message: any; }, req: any, res: any, 
     next();
 });
 
+app.get('/pokemon/:id', async (req, res) => {
+    const {data} = await axios.get("https://pokeapi.co/api/v2/pokemon/" + req.params.id);
+    res.json(data);
+})
 
 app.post(`/signup`, async (req, res) => {
     const {username, password} = req.body
@@ -281,4 +286,4 @@ const server = app.listen(3000, () =>
     console.log(`
 🚀 Server ready at: http://localhost:3000
 ⭐️ See sample requests: http://pris.ly/e/ts/rest-express#3-using-the-rest-api`),
-)
+);
