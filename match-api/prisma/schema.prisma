@@ -13,27 +13,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model MATCH {
-  id               Int           @id @default(autoincrement())
-  status           match_status?
+model Match {
+  id               Int          @id @default(autoincrement())
+  status           MatchStatus?
   owner_id         Int?
   opponent_id      Int?
   owner_deck_id    Int?
   opponent_deck_id Int?
-  MROUND           MROUND[]
+  Round            Round[]
 }
 
-model MROUND {
+model Round {
   id               Int    @id @default(autoincrement())
   match_id         Int?
   owner_poke_id    Int?
   opponent_poke_id Int?
   winner_id        Int?
   turn             Int?
-  MATCH            MATCH? @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Match            Match? @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-enum match_status {
+enum MatchStatus {
   pending
   started
   finished
