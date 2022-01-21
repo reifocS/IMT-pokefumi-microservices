@@ -2,21 +2,24 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import express from "express";
 import bodyParser from "body-parser";
 import axios from "axios";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const expressJwt = require("express-jwt");
 
+const POKE_API = "https://pokeapi.co/api/v2/pokemon/";
+
 const prisma = new PrismaClient();
 const app = express();
-const SECRET = "keyboard cat";
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   expressJwt({
-    secret: SECRET,
+    secret: process.env.SECRET,
     algorithms: ["HS256"],
     getToken: (req: any) => req.cookies.token,
   }).unless({ path: ["/ping", "/signup", "/login"] })
@@ -39,9 +42,7 @@ app.use(
 );
 
 app.get("/pokemon/:id", async (req, res) => {
-  const { data } = await axios.get(
-    "https://pokeapi.co/api/v2/pokemon/" + req.params.id
-  );
+  const { data } = await axios.get(POKE_API + req.params.id);
   res.json(data);
 });
 
@@ -80,7 +81,7 @@ app.post("/login", async (req, res) => {
         id: user.id,
         username: user.username,
       },
-      SECRET,
+      process.env.SECRET,
       { expiresIn: "24h" }
     );
     res.cookie("token", token, { httpOnly: true });
@@ -184,8 +185,8 @@ app.put("/deck/:id", async (req, res) => {
   }
 });
 
-app.listen(3000, () =>
-  console.log(`
-🚀 Server ready at: http://localhost:3000
-⭐️ See sample requests: http://pris.ly/e/ts/rest-express#3-using-the-rest-api`)
-);
+app.listen(process.env.USERS_API_PORT, () => {
+  console.log(
+    `🚀 User server ready at: ${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`
+  );
+});

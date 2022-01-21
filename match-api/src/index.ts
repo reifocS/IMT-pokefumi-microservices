@@ -1,20 +1,22 @@
 import { PrismaClient, MatchStatus } from "@prisma/client";
 import express from "express";
 import bodyParser from "body-parser";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const cookieParser = require("cookie-parser");
 const expressJwt = require("express-jwt");
 
 const prisma = new PrismaClient();
 const app = express();
-const SECRET = "keyboard cat";
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   expressJwt({
-    secret: SECRET,
+    secret: process.env.SECRET,
     algorithms: ["HS256"],
     getToken: (req: any) => req.cookies.token,
   }).unless({ path: ["/ping", "/signup", "/login"] })
@@ -124,6 +126,7 @@ app.get("/match/:id/rounds", async (req, res) => {
  */
 app.post("/match/:id/round", async (req, res) => {
   const { id } = req.params;
+
   try {
     const matchData = await prisma.match.findUnique({
       where: { id: Number(id) },
@@ -193,8 +196,8 @@ app.get("/round/:id", async (req, res) => {
   res.json(roundData);
 });
 
-app.listen(3100, () =>
-  console.log(`
-🚀 Server ready at: http://localhost:3100
-⭐️ See sample requests: http://pris.ly/e/ts/rest-express#3-using-the-rest-api`)
-);
+app.listen(process.env.MATCH_API_PORT, () => {
+  console.log(
+    `🚀 Match server ready at: ${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`
+  );
+});
