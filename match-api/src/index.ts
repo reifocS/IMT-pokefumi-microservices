@@ -37,25 +37,25 @@ app.use(
 );
 
 app.post(`/match`, async (req, res) => {
-    const { opponent_id, owner_deck_id, opponent_deck_id } = req.body;
-    const author = (req as any).user;
-    const status: MatchStatus = "pending";
-    try {
-        const result = await prisma.match.create({
-            data: {
-                status: status,
-                owner_id: author.id,
-                opponent_id: opponent_id,
-                owner_deck_id: owner_deck_id,
-                opponent_deck_id: opponent_deck_id
-            }
-        });
-        res.json(result);
-    } catch (error) {
-        console.log(error)
-        res.json({ error: error })
-    }
-})
+  const { opponentId, ownerDeckId, opponentDeckId } = req.body;
+  const author = (req as any).user;
+  const status: MatchStatus = "pending";
+  try {
+    const result = await prisma.match.create({
+      data: {
+        status: status,
+        owner_id: author.id,
+        opponent_id: opponentId,
+        owner_deck_id: ownerDeckId,
+        opponent_deck_id: opponentDeckId,
+      },
+    });
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
+});
 
 app.put("/match/:id", async (req, res) => {
   const { id } = req.params;
@@ -65,7 +65,8 @@ app.put("/match/:id", async (req, res) => {
       where: { id: Number(id) },
     });
     if (
-      newMatchData?.owner_id && matchData?.owner_id !== newMatchData.owner_id
+      newMatchData?.owner_id &&
+      matchData?.owner_id !== newMatchData.owner_id
     ) {
       throw new Error("Players can not be updated");
     }
@@ -116,7 +117,6 @@ app.get("/match/:id/rounds", async (req, res) => {
   }
 });
 
-
 /*
     TODO
     Check if pokemon is in the deck.
@@ -128,15 +128,16 @@ app.post("/match/:id/round", async (req, res) => {
     const matchData = await prisma.match.findUnique({
       where: { id: Number(id) },
     });
-    const { owner_poke_id, opponent_poke_id } = req.body;
+
+    const { ownerPokeId, opponentPokeId } = req.body;
 
     const user = (req as any).user.id;
 
-    if(matchData?.owner_id !== user && matchData?.opponent_id !== user) {
-        throw new Error("Not a player from the match");
+    if (matchData?.owner_id !== user && matchData?.opponent_id !== user) {
+      throw new Error("Not a player from the match");
     }
 
-    if (owner_poke_id && opponent_poke_id) {
+    if (ownerPokeId && opponentPokeId) {
       const roundsData = await prisma.round.findMany({
         where: { match_id: Number(id) },
       });
@@ -145,8 +146,8 @@ app.post("/match/:id/round", async (req, res) => {
       const newRound = await prisma.round.create({
         data: {
           Match: { connect: { id: matchData?.id } },
-          owner_poke_id: owner_poke_id,
-          opponent_poke_id: opponent_poke_id,
+          owner_poke_id: ownerPokeId,
+          opponent_poke_id: opponentPokeId,
           turn: turn,
         },
       });
@@ -162,7 +163,7 @@ app.post("/match/:id/round", async (req, res) => {
 
 app.put("/round/:id", async (req, res) => {
   const { id } = req.params;
-  const newRoundData  = req.body;
+  const newRoundData = req.body;
   try {
     const roundData = await prisma.round.findUnique({
       where: { id: Number(id) },
