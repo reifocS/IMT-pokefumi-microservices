@@ -1,4 +1,5 @@
 import { PrismaClient, MatchStatus } from "@prisma/client";
+import { isInDeck, beenPlayed, getStronger } from "./utils";
 import express from "express";
 import bodyParser from "body-parser";
 import * as dotenv from "dotenv";
@@ -119,11 +120,6 @@ app.get("/match/:id/rounds", async (req, res) => {
   }
 });
 
-/*
-    TODO
-    Check if pokemon is in the deck.
-    Check if it has not already been played.
- */
 app.post("/match/:id/round", async (req, res) => {
   const { id } = req.params;
 
