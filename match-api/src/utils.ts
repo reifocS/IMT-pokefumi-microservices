@@ -1,9 +1,4 @@
-import {
-  Pokemon,
-  PokemonColor,
-  PokemonSpecies,
-  PokemonType,
-} from "pokenode-ts";
+import { Pokemon, PokemonColor, PokemonSpecies } from "pokenode-ts";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { Type } from "./models/type";
 import { Damage } from "./models/damage";
@@ -33,22 +28,22 @@ function beenPlayed(pokemonId: string): boolean {
  * Which pokemon is the best
  */
 function getStronger(
-  pokemonId0: number,
-  pokemonId1: number
-): number | undefined {
+  pokemon0: Pokemon,
+  pokemon1: Pokemon
+): Pokemon | undefined {
   try {
-    const type0 = getPokemonType(pokemonId0);
-    const type1 = getPokemonType(pokemonId1);
-    const damage0 = getPokemonDamage(pokemonId0);
-    const damage1 = getPokemonDamage(pokemonId1);
-    Promise.all([type0, type1, damage0, damage1]).then((res) => {
-      const damageTo0 = getDamageTo(res[2], res[1]);
-      const damageTo1 = getDamageTo(res[3], res[0]);
+    const type0 = getPokemonType(pokemon0);
+    const type1 = getPokemonType(pokemon1);
+    const damage0 = getPokemonDamage(pokemon0);
+    const damage1 = getPokemonDamage(pokemon1);
+    Promise.all([damage0, damage1]).then((damages) => {
+      const damageTo0 = getDamageTo(damages[0], type1);
+      const damageTo1 = getDamageTo(damages[1], type0);
       Promise.all([damageTo0, damageTo1]).then((damagesTo) => {
         // eslint-disable-next-line prettier/prettier
-        return damagesTo[0] > damagesTo[1] ? pokemonId1
+        return damagesTo[0] > damagesTo[1] ? pokemon1
           : // eslint-disable-next-line prettier/prettier
-          damagesTo[0] < damagesTo[1] ? pokemonId0 : undefined;
+          damagesTo[0] < damagesTo[1] ? pokemon0 : undefined;
       });
     });
   } catch (error) {
@@ -112,14 +107,13 @@ function getColor(color: string): Promise<PokemonColor> {
 /**
  * by default black is returned
  */
-async function getPokemonColor(pokemonId: number): Promise<PokemonColor> {
+async function getPokemonColor(pokemon: Pokemon): Promise<PokemonColor> {
   let color: PokemonColor = {
     id: 0,
     name: "black",
     names: [],
     pokemon_species: [],
   };
-  const pokemon: Pokemon = await getPokemonById(pokemonId);
   if (pokemon?.species) {
     const species: PokemonSpecies = await getSpecies(pokemon.species.name);
     if (species) {
@@ -129,20 +123,10 @@ async function getPokemonColor(pokemonId: number): Promise<PokemonColor> {
   return color;
 }
 
-function getType(type: string): Promise<PokemonType> {
-  return new Promise<PokemonType>((resolve, reject) => {
-    axios
-      .get<PokemonType>(`${POKE_API}/type/${type}/`)
-      .then((response: AxiosResponse<PokemonType>) => resolve(response.data))
-      .catch((error: AxiosError<string>) => reject(error));
-  });
-}
-
 /**
- * by default unknow type is returned
+ * by default unknown type is returned
  */
-async function getPokemonType(pokemonId: number): Promise<Type[]> {
-  const pokemon: Pokemon = await getPokemonById(pokemonId);
+function getPokemonType(pokemon: Pokemon): Type[] {
   if (pokemon?.types && pokemon.types.length > 0) {
     let types!: Type[];
     for (const type of pokemon.types) {
@@ -183,8 +167,8 @@ function getDamageFromType(type: Type): Promise<Damage> {
   });
 }
 
-async function getPokemonDamage(pokemonId: number): Promise<Damage> {
-  const types = await getPokemonType(pokemonId);
+async function getPokemonDamage(pokemon: Pokemon): Promise<Damage> {
+  const types: Type[] = await getPokemonType(pokemon);
   // eslint-disable-next-line prefer-const
   let damage: Damage = {
     doubleDamageFrom: new Set<string>(),
