@@ -37,14 +37,12 @@ function getStronger(
     const damage0 = getPokemonDamage(pokemon0);
     const damage1 = getPokemonDamage(pokemon1);
     Promise.all([damage0, damage1]).then((damages) => {
-      const damageTo0 = getDamageTo(damages[0], type1);
-      const damageTo1 = getDamageTo(damages[1], type0);
-      Promise.all([damageTo0, damageTo1]).then((damagesTo) => {
-        // eslint-disable-next-line prettier/prettier
-        return damagesTo[0] > damagesTo[1] ? pokemon1
-          : // eslint-disable-next-line prettier/prettier
-          damagesTo[0] < damagesTo[1] ? pokemon0 : undefined;
-      });
+      const damagesTo0 = getDamageTo(damages[0], type1);
+      const damagesTo1 = getDamageTo(damages[1], type0);
+      // eslint-disable-next-line prettier/prettier
+      return damagesTo0 > damagesTo1 ? pokemon1
+        : // eslint-disable-next-line prettier/prettier
+        damagesTo0 < damagesTo1 ? pokemon0 : undefined;
     });
   } catch (error) {
     console.log(error);
@@ -58,10 +56,10 @@ function getDamageTo(
 ): number {
   let damage: number = 0;
   for (const type of pokemonAttacking) {
-    if (pokemonDefending.doubleDamageFrom.has(type.toString())) {
+    if (pokemonDefending.doubleDamageFrom.has(type)) {
       damage += 2;
     }
-    if (pokemonDefending.halfDamageFrom.has(type.toString())) {
+    if (pokemonDefending.halfDamageFrom.has(type)) {
       ++damage;
     }
   }
@@ -138,11 +136,11 @@ function getPokemonType(pokemon: Pokemon): Type[] {
   }
 }
 
-function getName(data: { name: string; url: string }[]): Set<string> {
-  const names: Set<string> = new Set<string>();
+function filterType(data: { name: string; url: string }[]): Set<Type> {
+  const names: Set<Type> = new Set<Type>();
   if (data.length > 0) {
     for (const name of data) {
-      names.add(name.name);
+      names.add(Type[name.name as keyof typeof Type]);
     }
   }
   return names;
@@ -155,12 +153,12 @@ function getDamageFromType(type: Type): Promise<Damage> {
       .get(`${POKE_API}/type/${type.toString()}/`)
       .then((response) => {
         const damages = response.data.damage_relations;
-        damage.doubleDamageFrom = getName(damages.double_damage_from);
-        damage.doubleDamageTo = getName(damages.double_damage_to);
-        damage.halfDamageFrom = getName(damages.half_damage_from);
-        damage.halfDamageTo = getName(damages.half_damage_to);
-        damage.noDamageFrom = getName(damages.no_damage_from);
-        damage.noDamageTo = getName(damages.no_damage_to);
+        damage.doubleDamageFrom = filterType(damages.double_damage_from);
+        damage.doubleDamageTo = filterType(damages.double_damage_to);
+        damage.halfDamageFrom = filterType(damages.half_damage_from);
+        damage.halfDamageTo = filterType(damages.half_damage_to);
+        damage.noDamageFrom = filterType(damages.no_damage_from);
+        damage.noDamageTo = filterType(damages.no_damage_to);
         return resolve(damage);
       })
       .catch((error: AxiosError<string>) => reject(error));
@@ -171,12 +169,12 @@ async function getPokemonDamage(pokemon: Pokemon): Promise<Damage> {
   const types: Type[] = await getPokemonType(pokemon);
   // eslint-disable-next-line prefer-const
   let damage: Damage = {
-    doubleDamageFrom: new Set<string>(),
-    doubleDamageTo: new Set<string>(),
-    halfDamageFrom: new Set<string>(),
-    halfDamageTo: new Set<string>(),
-    noDamageFrom: new Set<string>(),
-    noDamageTo: new Set<string>(),
+    doubleDamageFrom: new Set<Type>(),
+    doubleDamageTo: new Set<Type>(),
+    halfDamageFrom: new Set<Type>(),
+    halfDamageTo: new Set<Type>(),
+    noDamageFrom: new Set<Type>(),
+    noDamageTo: new Set<Type>(),
   };
   for (const type of types) {
     getDamageFromType(type).then((damageNew: Damage) => {
