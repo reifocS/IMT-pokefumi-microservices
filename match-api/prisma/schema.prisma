@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+//There is no enum type in SQLite
+// datasource db {
+//   provider = "sqlite"
+//   url      = "file:./dev.db"
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Match {
+  id               Int          @id @default(autoincrement())
+  status           MatchStatus?
+  owner_id         Int?
+  opponent_id      Int?
+  owner_deck_id    Int?
+  opponent_deck_id Int?
+  Round            Round[]
+  Invitation       Invitation?
+}
+
+model Round {
+  id               Int    @id @default(autoincrement())
+  match_id         Int?
+  owner_poke_id    Int?
+  opponent_poke_id Int?
+  winner_id        Int?
+  turn             Int?
+  Match            Match? @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+
+
+
+model Invitation {
+  id           Int   @id @default(autoincrement())
+  user_id      Int
+  match_id     Int?
+  Match        Match? @relation(fields: [match_id], references: [id])
+  resolved     Boolean?
+}
+enum MatchStatus {
+  pending
+  started
+  finished
+}
