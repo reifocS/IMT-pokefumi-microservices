@@ -40,8 +40,59 @@ app.use(
   }
 );
 
+app.put("/match/join/:id", async (req, res) => {
+  const { id } = req.params;
+  const user = (req as any).user;
+  try {
+    const matchData = await prisma.match.findUnique({
+      where: { id: Number(id) },
+      include: {
+        Invitation: true,
+      },
+    });
+    if (!matchData) {
+      return res.sendStatus(404);
+    }
+    if (user.id === matchData.owner_id) {
+      return res.status(400).send({
+        message: "User is already the match owner, he can't join his own match as opponent."
+      })
+    }
+    if (matchData.opponent_id != null) {
+      return res.status(400).send({
+        message: "Match is full."
+      })
+    }
+    if (matchData.Invitation && matchData.Invitation.user_id !== user.id) {
+      return res.status(403).send({
+        message: "You are not invited to this match.."
+      })
+    }
+    const newMatch = await prisma.match.update({
+      where: { id: Number(id) || undefined },
+      data: {
+        opponent_id: user.id,
+        status: "started",
+      },
+    });
+    if (matchData.Invitation) {
+      await prisma.invitation.update({
+        where: { id: matchData.Invitation.id },
+        data: {
+          ...matchData.Invitation,
+          resolved: true,
+        },
+      });
+    }
+    res.json(newMatch);
+  } catch (error: any) {
+    console.error(error);
+    res.json({ error: error.message });
+  }
+});
+
 app.post(`/match`, async (req, res) => {
-  const { opponentId, ownerDeckId, opponentDeckId } = req.body;
+  const { opponentId, ownerDeckId, opponentDeckId, Invitation } = req.body;
   const author = (req as any).user;
   const status: MatchStatus = "pending";
   try {
@@ -52,9 +103,25 @@ app.post(`/match`, async (req, res) => {
         opponent_id: opponentId,
         owner_deck_id: ownerDeckId,
         opponent_deck_id: opponentDeckId,
+        Invitation: {
+          create: Invitation,
+        },
       },
     });
     res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
+});
+
+app.get("/invitations", async (req, res) => {
+  const user = (req as any).user;
+  try {
+    const invitations = await prisma.invitation.findMany({
+      where: { user_id: user.id },
+    });
+    res.json(invitations);
   } catch (error) {
     console.log(error);
     res.json({ error: error });
@@ -99,8 +166,15 @@ app.get("/match/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const matchData = await prisma.match.findUnique({
+      include: {
+        Invitation: true,
+        Round: true,
+      },
       where: { id: Number(id) },
     });
+    if (matchData == null) {
+      return res.sendStatus(404);
+    }
     res.json(matchData);
   } catch (error) {
     console.log(error);

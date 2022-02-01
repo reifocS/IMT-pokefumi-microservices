@@ -87,6 +87,8 @@ app.post("/login", async (req, res) => {
     res.cookie("token", token, { httpOnly: true });
     user.password = "";
     res.json(user);
+  } else {
+      res.sendStatus(404);
   }
 });
 
