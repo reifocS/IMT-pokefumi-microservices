@@ -4,24 +4,25 @@ import { Type } from "./models/type";
 import { Damage } from "./models/damage";
 
 const POKE_API = "https://pokeapi.co/api/v2";
+const USERS_API = `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
 
-/**
- * Check if pokemon is in the deck.
- * @param pokeId
- * @returns
- */
-async function isInDeck(pokeId: string): Promise<Boolean> {
-  const { data } = await axios.get(POKE_API + pokeId);
-  return true;
-}
-
-/**
- * Check if it has not already been played.
- * @param pokemonId
- * @returns
- */
-function beenPlayed(pokemonId: string): boolean {
-  return true;
+// TODO : check if we can rather use the accessToken as a type in itself
+async function getPokemonsFromDeck(
+  deckId: number,
+  accessToken: string
+): Promise<Pokemon[]> {
+  const authAxios = axios.create({
+    baseURL: USERS_API,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return new Promise<Pokemon[]>((resolve, reject) => {
+    authAxios
+      .get<Pokemon[]>(`${USERS_API}/deck/${deckId}/`)
+      .then((response: AxiosResponse<Pokemon[]>) => resolve(response.data))
+      .catch((error: AxiosError<string>) => reject(error));
+  });
 }
 
 /**
@@ -40,10 +41,12 @@ async function getStronger(
       const damagesTo0 = getDamageTo(damages[0], type1);
       const damagesTo1 = getDamageTo(damages[1], type0);
       // eslint-disable-next-line prettier/prettier
-      return damagesTo0 > damagesTo1 ? pokemon1
+      return damagesTo0 > damagesTo1
+        ? pokemon1
         : // eslint-disable-next-line prettier/prettier
-        damagesTo0 < damagesTo1 ? pokemon0 : undefined;
-
+        damagesTo0 < damagesTo1
+        ? pokemon0
+        : undefined;
     });
   } catch (error) {
     console.log(error);
@@ -195,7 +198,6 @@ export {
   getPokemonByName,
   getPokemonById,
   getPokemonColor,
-  isInDeck,
-  beenPlayed,
   getStronger,
+  getPokemonsFromDeck,
 };

@@ -1,5 +1,5 @@
 import { PrismaClient, MatchStatus } from "@prisma/client";
-import { isInDeck, beenPlayed, getStronger, getPokemonById } from "./utils";
+import { getStronger, getPokemonById, getPokemonsFromDeck } from "./utils";
 import express from "express";
 import bodyParser from "body-parser";
 import * as dotenv from "dotenv";
@@ -21,7 +21,7 @@ app.use(
     secret: process.env.SECRET,
     algorithms: ["HS256"],
     getToken: (req: any) => req.cookies.token,
-  }).unless({ path: ["/ping", "/signup", "/login"] })
+  })
 );
 
 app.use(
@@ -121,7 +121,7 @@ app.get("/match/:id/rounds", async (req, res) => {
   }
 });
 
-app.post("/match/:id/round", async (req, res) => {
+app.post("/match/:id/rounds", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -129,73 +129,75 @@ app.post("/match/:id/round", async (req, res) => {
       where: { id: Number(id) },
     });
 
-    const { ownerPokeId, opponentPokeId } = req.body;
+    if (matchData?.owner_id == null || matchData?.opponent_id == null) {
+      throw new Error("At least two players are required");
+    }
 
     const user = (req as any).user.id;
-
     if (matchData?.owner_id !== user && matchData?.opponent_id !== user) {
       throw new Error("Not a player from the match");
     }
 
-    if (ownerPokeId && opponentPokeId) {
-      const roundsData = await prisma.round.findMany({
-        where: { match_id: Number(id) },
-      });
+    if (
+      matchData?.owner_deck_id == null ||
+      matchData?.opponent_deck_id == null
+    ) {
+      throw new Error("At least one of the players has not created a deck");
+    }
 
-      const turn = 1 + roundsData?.length;
+    // TODO : is it better to ask to the Round table from match ? or to all Rounds ? orm ?
+    let turn = 1;
+    const roundsData = prisma.round.findMany({
+      where: { match_id: Number(id) },
+    });
+
+    const pokemons0 = getPokemonsFromDeck(
+      matchData?.owner_deck_id,
+      req.cookies.token
+    );
+    const pokemons1 = getPokemonsFromDeck(
+      matchData?.opponent_deck_id,
+      req.cookies.token
+    );
+
+    Promise.all([roundsData, pokemons0, pokemons1]).then(async (results) => {
+      turn += results[0]?.length;
+      if (Math.min(results[0]?.length, results[1]?.length) < turn) {
+        throw new Error(
+          "At least one of the players has not enough cards in its deck to play the round"
+        );
+      }
+
+      const pokemon0 = results[1][turn - 1];
+      const pokemon1 = results[2][turn - 1];
+      const winner = await getStronger(pokemon0, pokemon1);
+      let winnerId: number | null = null;
+      if (winner !== undefined) {
+        if (winner.id === pokemon0.id) {
+          winnerId = matchData!.owner_id;
+        }
+        if (winner.id === pokemon1.id) {
+          winnerId = matchData!.opponent_id;
+        }
+      }
+
       const newRound = await prisma.round.create({
         data: {
           Match: { connect: { id: matchData?.id } },
-          owner_poke_id: ownerPokeId,
-          opponent_poke_id: opponentPokeId,
+          owner_poke_id: pokemon0.id,
+          opponent_poke_id: pokemon1.id,
           turn: turn,
+          winner_id: winnerId,
         },
       });
       res.json(newRound);
-    } else {
-      throw new Error("At least two players are required");
-    }
-  } catch (error) {
-    console.log(error);
-    res.json({ error: error });
-  }
-});
-
-app.get("/round", async (req, res) => {
-  const { pokemonId1 } = req.params;
-  const { pokemonId2 } = req.params;
-  try {
-    const pokemon1 = getPokemonById(pokemonId1);
-    const pokemon2 = getPokemonById(pokemonId2);
-    Promise.all([pokemon1, pokemon2]).then((pokemons) => {
-      getStronger(pokemons[0], pokemons[1]).then((pokemon: Pokemon) => {
-        res.json({ winner: pokemon.toString() });
+      // redundancy ?
+      const newMatchData = matchData?.Round.push(newRound);
+      prisma.match.update({
+        where: { id: Number(id) || undefined },
+        data: newMatchData,
       });
     });
-  } catch (error) {
-    console.log(error);
-    res.json({ error: error });
-  }
-});
-
-app.put("/round/:id", async (req, res) => {
-  const { id } = req.params;
-  const newRoundData = req.body;
-  try {
-    const roundData = await prisma.round.findUnique({
-      where: { id: Number(id) },
-    });
-    if (roundData?.match_id !== newRoundData.match_id) {
-      throw new Error("Round can not switch of match");
-    }
-    // if (winner && winner !== matchData?.owner_id && winner !== matchData?.opponent_id) {
-    //     throw new Error("Winner does not belong to players")
-    // }
-    const newRound = await prisma.round.update({
-      where: { id: Number(id) || undefined },
-      data: newRoundData,
-    });
-    res.json(newRound);
   } catch (error) {
     console.log(error);
     res.json({ error: error });
@@ -208,6 +210,32 @@ app.get("/round/:id", async (req, res) => {
     where: { id: Number(id) },
   });
   res.json(roundData);
+});
+
+app.get("/stronger", async (req, res) => {
+  try {
+    const { pokemonId1, pokemonId2 } = req.body;
+    const pokemon1 = getPokemonById(pokemonId1);
+    const pokemon2 = getPokemonById(pokemonId2);
+    Promise.all([pokemon1, pokemon2]).then((pokemons: Pokemon[]) => {
+      if (
+        pokemons.length === 2 &&
+        pokemons[0] !== undefined &&
+        pokemons[1] !== undefined
+      ) {
+        getStronger(pokemons[0]!, pokemons[1]!).then(
+          (pokemon: Pokemon | undefined) => {
+            res.json({ winner: pokemon?.toString() });
+          }
+        );
+      } else {
+        throw new Error("Pokemon not found with the given id");
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
 });
 
 app.listen(process.env.MATCH_API_PORT, () => {

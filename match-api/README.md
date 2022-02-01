@@ -6,7 +6,7 @@ This example shows how to implement a **REST API with TypeScript** using [Expres
 
 ```bash
 npm install
-npx prisma db pull
+npx prisma db push
 npx prisma generate
 npm run start
 ```
