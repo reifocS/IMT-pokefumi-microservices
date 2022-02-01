@@ -145,6 +145,25 @@ app.get("/logout", (req, res) => {
   res.json({ message: "logged out" });
 });
 
+app.get("/deck/:id", async (req, res) => {
+  const { id } = req.params;
+  const user = (req as any).user;
+
+  try {
+    const deckData = await prisma.deck.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (deckData?.authorId !== user.id) {
+      throw new Error("Deck is private");
+    }
+    res.json(deckData);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
+});
+
 app.put("/deck/:id", async (req, res) => {
   const { id } = req.params;
   const user = (req as any).user;
