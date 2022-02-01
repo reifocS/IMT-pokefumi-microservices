@@ -54,15 +54,19 @@ app.put("/match/join/:id", async (req, res) => {
       return res.sendStatus(404);
     }
     if (user.id === matchData.owner_id) {
-      throw new Error(
-        "User is already the match owner, he can't join his own match as opponent."
-      );
+      return res.status(400).send({
+          message: "User is already the match owner, he can't join his own match as opponent."
+      })
     }
     if (matchData.opponent_id != null) {
-      throw new Error("Match is full.");
+        return res.status(400).send({
+            message: "Match is full."
+        })
     }
     if (matchData.Invitation && matchData.Invitation.user_id !== user.id) {
-      throw new Error("You are not invited to this match.");
+        return res.status(403).send({
+            message: "You are not invited to this match.."
+        })
     }
     const newMatch = await prisma.match.update({
       where: { id: Number(id) || undefined },
