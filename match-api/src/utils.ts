@@ -27,10 +27,10 @@ function beenPlayed(pokemonId: string): boolean {
 /**
  * Which pokemon is the best
  */
-function getStronger(
+async function getStronger(
   pokemon0: Pokemon,
   pokemon1: Pokemon
-): Pokemon | undefined {
+): Promise<Pokemon | undefined> {
   try {
     const type0 = getPokemonType(pokemon0);
     const type1 = getPokemonType(pokemon1);
@@ -43,10 +43,11 @@ function getStronger(
       return damagesTo0 > damagesTo1 ? pokemon1
         : // eslint-disable-next-line prettier/prettier
         damagesTo0 < damagesTo1 ? pokemon0 : undefined;
+
     });
   } catch (error) {
     console.log(error);
-    return undefined;
+    return Promise.resolve(undefined);
   }
 }
 
