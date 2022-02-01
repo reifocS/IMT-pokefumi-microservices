@@ -1,8 +1,9 @@
 import { PrismaClient, MatchStatus } from "@prisma/client";
-import { isInDeck, beenPlayed, getStronger } from "./utils";
+import { isInDeck, beenPlayed, getStronger, getPokemonById } from "./utils";
 import express from "express";
 import bodyParser from "body-parser";
 import * as dotenv from "dotenv";
+import { Pokemon } from "pokenode-ts";
 dotenv.config();
 
 const cookieParser = require("cookie-parser");
@@ -154,6 +155,23 @@ app.post("/match/:id/round", async (req, res) => {
     } else {
       throw new Error("At least two players are required");
     }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
+});
+
+app.get("/round", async (req, res) => {
+  const { pokemonId1 } = req.params;
+  const { pokemonId2 } = req.params;
+  try {
+    const pokemon1 = getPokemonById(pokemonId1);
+    const pokemon2 = getPokemonById(pokemonId2);
+    Promise.all([pokemon1, pokemon2]).then((pokemons) => {
+      getStronger(pokemons[0], pokemons[1]).then((pokemon: Pokemon) => {
+        res.json({ winner: pokemon.toString() });
+      });
+    });
   } catch (error) {
     console.log(error);
     res.json({ error: error });
