@@ -21,6 +21,7 @@ model Match {
   owner_deck_id    Int?
   opponent_deck_id Int?
   Round            Round[]
+  Invitation       Invitation?
 }
 
 model Round {
@@ -33,6 +34,16 @@ model Round {
   Match            Match? @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+
+
+
+model Invitation {
+  id           Int   @id @default(autoincrement())
+  user_id      Int
+  match_id     Int?
+  Match        Match? @relation(fields: [match_id], references: [id])
+  resolved     Boolean?
+}
 enum MatchStatus {
   pending
   started
