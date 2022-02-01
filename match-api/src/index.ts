@@ -191,12 +191,12 @@ app.post("/match/:id/rounds", async (req, res) => {
         },
       });
       res.json(newRound);
-      // redundancy ?
-      const newMatchData = matchData?.Round.push(newRound);
-      prisma.match.update({
-        where: { id: Number(id) || undefined },
-        data: newMatchData,
-      });
+      // TODO : redundancy ?
+      // const newMatchData = matchData?.Round.push(newRound);
+      // prisma.match.update({
+      //   where: { id: Number(id) || undefined },
+      //   data: newMatchData,
+      // });
     });
   } catch (error) {
     console.log(error);
