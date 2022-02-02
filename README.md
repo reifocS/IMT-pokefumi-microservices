@@ -51,7 +51,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 ### Principes des microservices
 
-- [Introducing Domain-Oriented Microservice Architecture - Uber Engineering Blog](https://eng.uber.com/microservice-architecture/)
+- [Les microservices, qu'est-ce que c'est ?](https://www.redhat.com/fr/topics/microservices/what-are-microservices)
 - [Microservice Architecture — Learn, Build, and Deploy Applications - DZone Microservices](https://dzone.com/articles/microservice-architecture-learn-build-and-deploy-a)
 
 ### Prisma database
@@ -61,14 +61,21 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 ### Docker
 
+- [Que sont les conteneurs ? | Atlassian](https://www.atlassian.com/fr/continuous-delivery/microservices/containers)
 - [Visual Studio Code Remote Development](https://code.visualstudio.com/docs/remote/remote-overview)
-- [What will you learn in this module? | Docker Documentation](https://docs.docker.com/language/nodejs/)
+- [Docker Nodejs Tutorial](https://docs.docker.com/language/nodejs/)
 
 Création et Utilisation de Conteneurs :
 
 ```bash
 docker build -t matchs:v1 .
 docker run --publish 5000:5000/tcp matchs:v1 & 
+```
+
+Exécution d'applications multi-containes :
+
+```bash
+docker-compose up --build
 ```
 
 Autres commandes :
