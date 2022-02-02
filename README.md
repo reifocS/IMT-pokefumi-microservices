@@ -54,7 +54,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 - [Introducing Domain-Oriented Microservice Architecture - Uber Engineering Blog](https://eng.uber.com/microservice-architecture/)
 - [Microservice Architecture — Learn, Build, and Deploy Applications - DZone Microservices](https://dzone.com/articles/microservice-architecture-learn-build-and-deploy-a)
 
-### Database
+### Prisma database
 
 - [Getting started with Prisma, the best TypeScript ORM | by Dries Augustyns | CodeX | Medium](https://medium.com/codex/getting-started-with-the-best-typescript-orm-e0655dd3966)
 - [Database connectors | Prisma Docs](https://www.prisma.io/docs/concepts/database-connectors)
