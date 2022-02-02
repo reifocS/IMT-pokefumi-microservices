@@ -1,11 +1,10 @@
 FROM node:17.0.1
 
-WORKDIR /match/src/
+WORKDIR /usr/src/
 
 COPY . .
 
 RUN npm install
-RUN npx prisma db push
 RUN npx prisma generate
 
 COPY prisma prisma
@@ -13,4 +12,4 @@ COPY prisma prisma
 
 CMD ["npm", "start"]
 
-EXPOSE 8081
+EXPOSE 3000
