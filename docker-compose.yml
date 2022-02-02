@@ -1,0 +1,13 @@
+services:
+
+  match:
+    build: ./match-api
+    volumes:
+      - ./match-api:/match/src/
+    depends_on:
+      - user
+
+  user:
+    build: ./users-api
+    volumes:
+      - ./users-api:/usr/src

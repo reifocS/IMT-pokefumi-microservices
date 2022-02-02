@@ -5,7 +5,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "prebuild": "rd /s /q dist",
+    "prebuild": "rm -rf dist/*",
     "build": "tsc --project ./",
     "prestart": "npm run build",
     "start": "ts-node .",
