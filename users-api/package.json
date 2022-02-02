@@ -5,9 +5,8 @@
   "main": "dist/src/index.js",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "prebuild": "rd /s /q dist",
+    "prebuild": "tsc --build --clean",
     "build": "tsc --project ./",
-    "prestart": "npm run build",
     "start": "ts-node .",
     "format": "npx eslint src/* --quiet --fix & npx prettier --write ."
   },
