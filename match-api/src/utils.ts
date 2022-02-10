@@ -2,25 +2,23 @@ import { Pokemon, PokemonColor, PokemonSpecies } from "pokenode-ts";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { Type } from "./models/type";
 import { Damage } from "./models/damage";
+import { Deck } from "./models/deck";
 
 const POKE_API = "https://pokeapi.co/api/v2";
 const USERS_API = `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
 
 // TODO : check if we can rather use the accessToken as a type in itself
-async function getPokemonsFromDeck(
-  deckId: number,
-  accessToken: string
-): Promise<Pokemon[]> {
+async function getDeck(deckId: number, accessToken: string): Promise<Deck> {
   const authAxios = axios.create({
     baseURL: USERS_API,
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
-  return new Promise<Pokemon[]>((resolve, reject) => {
+  return new Promise<Deck>((resolve, reject) => {
     authAxios
-      .get<Pokemon[]>(`${USERS_API}/deck/${deckId}/`)
-      .then((response: AxiosResponse<Pokemon[]>) => resolve(response.data))
+      .get<Deck>(`${USERS_API}/deck/${deckId}/`)
+      .then((response: AxiosResponse<Deck>) => resolve(response.data))
       .catch((error: AxiosError<string>) => reject(error));
   });
 }
@@ -199,5 +197,5 @@ export {
   getPokemonById,
   getPokemonColor,
   getStronger,
-  getPokemonsFromDeck,
+  getDeck,
 };

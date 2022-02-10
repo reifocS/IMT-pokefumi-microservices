@@ -1,9 +1,10 @@
 import { PrismaClient, MatchStatus } from "@prisma/client";
-import { getStronger, getPokemonById, getPokemonsFromDeck } from "./utils";
+import { getStronger, getPokemonById, getDeck } from "./utils";
 import express from "express";
 import bodyParser from "body-parser";
-import * as dotenv from "dotenv";
 import { Pokemon } from "pokenode-ts";
+import { Deck } from "./models/deck";
+import * as dotenv from "dotenv";
 dotenv.config();
 
 const cookieParser = require("cookie-parser");
@@ -93,7 +94,8 @@ app.put("/match/join/:id", async (req, res) => {
 });
 
 app.post(`/match`, async (req, res) => {
-  const { opponentId, ownerDeckId, opponentDeckId, Invitation } = req.body;
+  // const { opponentId, ownerDeckId, opponentDeckId, Invitation } = req.body;
+  const { opponentId, Invitation } = req.body;
   const author = (req as any).user;
   const status: MatchStatus = "pending";
   try {
@@ -102,14 +104,51 @@ app.post(`/match`, async (req, res) => {
         status: status,
         owner_id: author.id,
         opponent_id: opponentId,
-        owner_deck_id: ownerDeckId,
-        opponent_deck_id: opponentDeckId,
+        // owner_deck_id: ownerDeckId,
+        // opponent_deck_id: opponentDeckId,
         Invitation: {
           create: Invitation,
         },
       },
     });
     res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
+});
+
+app.put(`/match/:id/selectDeck`, async (req, res) => {
+  const { deckId } = req.body;
+  const { user } = (req as any).user.id;
+  const { id } = req.params;
+  try {
+    const matchData = prisma.match.findUnique({
+      where: { id: Number(id) },
+    });
+    const deck = getDeck(deckId, req.cookies.token);
+
+    Promise.all([matchData, deck]).then(async (results) => {
+      if (results[0]?.owner_id == null || results[0]?.opponent_id == null) {
+        throw new Error("Match data uncompleted");
+      }
+      if (results[0].owner_id !== user && results[0].opponent_id !== user) {
+        throw new Error("Not a player from the match.");
+      }
+      if (results[1]?.author.id !== user) {
+        throw new Error("Not a deck from the player.");
+      }
+
+      const isOwner: boolean = results[0]?.owner_id !== user;
+      const prop = isOwner ? "owner_deck_id" : "opponent_deck_id";
+      results[0][prop] = results[1]?.id;
+
+      const result = await prisma.match.update({
+        where: { id: Number(id) },
+        data: results[0],
+      });
+      res.json(result);
+    });
   } catch (error) {
     console.log(error);
     res.json({ error: error });
@@ -226,25 +265,29 @@ app.post("/match/:id/rounds", async (req, res) => {
       where: { match_id: Number(id) },
     });
 
-    const pokemons0 = getPokemonsFromDeck(
+    const deck0: Promise<Deck> = getDeck(
       matchData?.owner_deck_id,
       req.cookies.token
     );
-    const pokemons1 = getPokemonsFromDeck(
+    const deck1: Promise<Deck> = getDeck(
       matchData?.opponent_deck_id,
       req.cookies.token
     );
 
-    Promise.all([roundsData, pokemons0, pokemons1]).then(async (results) => {
-      turn += results[0]?.length;
-      if (Math.min(results[0]?.length, results[1]?.length) < turn) {
+    Promise.all([deck0, deck1, roundsData]).then(async (results) => {
+      turn += results[2]?.length;
+
+      if (
+        Math.min(results[0].pokemons?.length, results[1]?.pokemons?.length) <
+        turn
+      ) {
         throw new Error(
           "At least one of the players has not enough cards in its deck to play the round"
         );
       }
 
-      const pokemon0 = results[1][turn - 1];
-      const pokemon1 = results[2][turn - 1];
+      const pokemon0: Pokemon = results[0].pokemons[turn - 1];
+      const pokemon1: Pokemon = results[1].pokemons[turn - 1];
       const winner = await getStronger(pokemon0, pokemon1);
       let winnerId: number | null = null;
       if (winner !== undefined) {
