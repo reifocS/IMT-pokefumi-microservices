@@ -52,18 +52,23 @@ app.get("/pokemon/:id", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
-  const result = await prisma.user.create({
-    data: {
-      username,
-      password,
-      victory: 0,
-      defeat: 0,
-      decks: {
-        create: [],
+  try {
+    const result = await prisma.user.create({
+      data: {
+        username,
+        password,
+        victory: 0,
+        defeat: 0,
+        decks: {
+          create: [],
+        },
       },
-    },
-  });
-  res.json(result);
+    });
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
 });
 
 app.post("/login", async (req, res) => {
@@ -96,21 +101,41 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/deck", async (req, res) => {
-  const { pokemons } = req.body;
-  const author = (req as any).user.id;
-  const pokeData = pokemons?.map((poke: Prisma.PokemonCreateInput) => {
-    return { pokeId: poke.pokeId };
-  });
-  const result = await prisma.deck.create({
-    data: {
-      author: { connect: { id: author } },
-      pokemons: {
-        create: pokeData,
-      },
+/**
+ * 
+{
+  "user": {
+    "id": 4
+  },
+  "pokemons": [
+    {
+      "pokeId": 3
     },
-  });
-  res.json(result);
+    {
+      "pokeId": 5
+    }]
+}
+ */
+app.post("/deck", async (req, res) => {
+  const author = (req as any).user.id;
+  try {
+    const { pokemons } = req.body;
+    const pokeData = pokemons?.map((poke: Prisma.PokemonCreateInput) => {
+      return { pokeId: poke.pokeId };
+    });
+    const result = await prisma.deck.create({
+      data: {
+        author: { connect: { id: author } },
+        pokemons: {
+          create: pokeData,
+        },
+      },
+    });
+    res.json(result);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
+  }
 });
 
 app.get("/users", async (req, res) => {
