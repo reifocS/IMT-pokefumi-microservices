@@ -42,7 +42,7 @@ app.use(
 );
 
 app.get("/ping", async (req, res) => {
-  res.json("Hello friend 👽 !");
+  res.json("Hello friend 👨 !");
 });
 
 app.get("/pokemon/:id", async (req, res) => {
@@ -166,14 +166,19 @@ app.get("/decks", async (req, res) => {
   res.json(decks);
 });
 
-app.get("/pokemons", async (req, res) => {
-  const pokemons = await prisma.pokemon.findMany({});
-  res.json(pokemons);
-});
-
-app.get("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "logged out" });
+app.get("/decks/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const decks = await prisma.deck.findMany({
+    where: {
+      authorId: {
+        equals: Number(userId),
+      },
+    },
+    include: {
+      pokemons: true,
+    },
+  });
+  res.json(decks);
 });
 
 app.get("/deck/:id", async (req, res) => {
@@ -185,6 +190,7 @@ app.get("/deck/:id", async (req, res) => {
       where: { id: Number(id) },
     });
 
+    // TODO : why are decks private here ? whereas we can use get:/decks ?
     if (deckData?.authorId !== user.id) {
       throw new Error("Deck is private");
     }
@@ -233,6 +239,16 @@ app.put("/deck/:id", async (req, res) => {
     console.log(error);
     res.json({ error: error });
   }
+});
+
+app.get("/pokemons", async (req, res) => {
+  const pokemons = await prisma.pokemon.findMany({});
+  res.json(pokemons);
+});
+
+app.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "logged out" });
 });
 
 app.listen(process.env.USERS_API_PORT, () => {

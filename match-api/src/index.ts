@@ -22,7 +22,7 @@ app.use(
     secret: process.env.SECRET,
     algorithms: ["HS256"],
     getToken: (req: any) => req.cookies.token,
-  })
+  }).unless({ path: ["/ping"] })
 );
 
 app.use(
@@ -40,6 +40,10 @@ app.use(
     next();
   }
 );
+
+app.get("/ping", async (req, res) => {
+  res.json("Hello friend 👽 !");
+});
 
 app.put("/match/join/:id", async (req, res) => {
   const { id } = req.params;
@@ -199,6 +203,31 @@ app.get("/matchs", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ error: error });
+  }
+});
+
+app.get("/matchs/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const matchs = await prisma.match.findMany({
+      where: {
+        OR: [
+          {
+            owner_id: {
+              equals: Number(userId),
+            },
+          },
+          {
+            opponent_id: {
+              equals: Number(userId),
+            },
+          },
+        ],
+      },
+    });
+    res.json(matchs);
+  } catch (error) {
+    console.log(error);
   }
 });
 
