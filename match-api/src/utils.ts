@@ -12,7 +12,7 @@ async function getDeck(deckId: number, accessToken: string): Promise<Deck> {
   const authAxios = axios.create({
     baseURL: USERS_API,
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      Cookie: `token=${accessToken}`,
     },
   });
   return new Promise<Deck>((resolve, reject) => {
@@ -43,8 +43,8 @@ async function getStronger(
         ? pokemon1
         : // eslint-disable-next-line prettier/prettier
         damagesTo0 < damagesTo1
-        ? pokemon0
-        : undefined;
+          ? pokemon0
+          : undefined;
     });
   } catch (error) {
     console.log(error);
