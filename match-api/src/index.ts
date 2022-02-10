@@ -128,24 +128,24 @@ app.put(`/match/:id/selectDeck`, async (req, res) => {
     });
     const deck = getDeck(deckId, req.cookies.token);
 
-    Promise.all([matchData, deck]).then(async (results) => {
-      if (results[0]?.owner_id == null || results[0]?.opponent_id == null) {
+    Promise.all([matchData, deck]).then(async ([matchData, deck]) => {
+      if (matchData?.owner_id == null || matchData?.opponent_id == null) {
         throw new Error("Match data uncompleted");
       }
-      if (results[0].owner_id !== user && results[0].opponent_id !== user) {
+      if (matchData.owner_id !== user && matchData.opponent_id !== user) {
         throw new Error("Not a player from the match.");
       }
-      if (results[1]?.author.id !== user) {
+      if (deck?.author.id !== user) {
         throw new Error("Not a deck from the player.");
       }
 
-      const isOwner: boolean = results[0]?.owner_id !== user;
+      const isOwner: boolean = matchData?.owner_id !== user;
       const prop = isOwner ? "owner_deck_id" : "opponent_deck_id";
-      results[0][prop] = results[1]?.id;
+      matchData[prop] = deck?.id;
 
       const result = await prisma.match.update({
         where: { id: Number(id) },
-        data: results[0],
+        data: matchData,
       });
       res.json(result);
     });
@@ -274,48 +274,47 @@ app.post("/match/:id/rounds", async (req, res) => {
       req.cookies.token
     );
 
-    Promise.all([deck0, deck1, roundsData]).then(async (results) => {
-      turn += results[2]?.length;
+    Promise.all([deck0, deck1, roundsData]).then(
+      async ([deck0, deck1, roundsData]) => {
+        turn += roundsData?.length;
 
-      if (
-        Math.min(results[0].pokemons?.length, results[1]?.pokemons?.length) <
-        turn
-      ) {
-        throw new Error(
-          "At least one of the players has not enough cards in its deck to play the round"
-        );
-      }
-
-      const pokemon0: Pokemon = results[0].pokemons[turn - 1];
-      const pokemon1: Pokemon = results[1].pokemons[turn - 1];
-      const winner = await getStronger(pokemon0, pokemon1);
-      let winnerId: number | null = null;
-      if (winner !== undefined) {
-        if (winner.id === pokemon0.id) {
-          winnerId = matchData!.owner_id;
+        if (Math.min(deck0.pokemons?.length, deck1?.pokemons?.length) < turn) {
+          throw new Error(
+            "At least one of the players has not enough cards in its deck to play the round"
+          );
         }
-        if (winner.id === pokemon1.id) {
-          winnerId = matchData!.opponent_id;
-        }
-      }
 
-      const newRound = await prisma.round.create({
-        data: {
-          Match: { connect: { id: matchData?.id } },
-          owner_poke_id: pokemon0.id,
-          opponent_poke_id: pokemon1.id,
-          turn: turn,
-          winner_id: winnerId,
-        },
-      });
-      res.json(newRound);
-      // TODO : redundancy ?
-      // const newMatchData = matchData?.Round.push(newRound);
-      // prisma.match.update({
-      //   where: { id: Number(id) || undefined },
-      //   data: newMatchData,
-      // });
-    });
+        const pokemon0: Pokemon = deck0.pokemons[turn - 1];
+        const pokemon1: Pokemon = deck1.pokemons[turn - 1];
+        const winner = await getStronger(pokemon0, pokemon1);
+        let winnerId: number | null = null;
+        if (winner !== undefined) {
+          if (winner.id === pokemon0.id) {
+            winnerId = matchData!.owner_id;
+          }
+          if (winner.id === pokemon1.id) {
+            winnerId = matchData!.opponent_id;
+          }
+        }
+
+        const newRound = await prisma.round.create({
+          data: {
+            Match: { connect: { id: matchData?.id } },
+            owner_poke_id: pokemon0.id,
+            opponent_poke_id: pokemon1.id,
+            turn: turn,
+            winner_id: winnerId,
+          },
+        });
+        res.json(newRound);
+        // TODO : redundancy ?
+        // const newMatchData = matchData?.Round.push(newRound);
+        // prisma.match.update({
+        //   where: { id: Number(id) || undefined },
+        //   data: newMatchData,
+        // });
+      }
+    );
   } catch (error) {
     console.log(error);
     res.json({ error: error });
