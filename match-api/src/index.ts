@@ -357,6 +357,6 @@ app.get("/stronger", async (req, res) => {
 
 app.listen(process.env.MATCH_API_PORT, () => {
   console.log(
-    `🚀 Match server ready at: ${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`
+    `🪐 Match server ready at: ${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`
   );
 });

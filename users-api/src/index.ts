@@ -41,6 +41,10 @@ app.use(
   }
 );
 
+app.get("/ping", async (req, res) => {
+  res.json("Hello friend 👽 !");
+});
+
 app.get("/pokemon/:id", async (req, res) => {
   const { data } = await axios.get(POKE_API + req.params.id);
   res.json(data);
@@ -88,7 +92,7 @@ app.post("/login", async (req, res) => {
     user.password = "";
     res.json(user);
   } else {
-      res.sendStatus(404);
+    res.sendStatus(404);
   }
 });
 
