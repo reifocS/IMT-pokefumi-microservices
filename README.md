@@ -14,8 +14,8 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
    6. [x] inviter un autre joueur à un match (creer un match)
    7. [x] consulter les invitations reçues
    8. [x] accepter une invitation à un match (joindre un match existant)
-   9. [ ] créer un deck pour un match
-   10. [x] envoyer un Pokémon à l’arena et consulter le résultat du combat
+   9. [x] créer un deck pour un match
+   10. [x] envoyer un Pokémon à l’arena et consulter le résultat du combat (le joueur n'envoie pas un Pokémon en particulier mais envoie un deck, donc au moins un Pokémon, à l'arena)
 
 2. [ ] En tant qu’administrateur, je peux …
 
@@ -38,10 +38,11 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 ## Structure des dossiers
 
 - Le répertoire **users-api** contiendra le microservice pour répondre aux besoins de connexions et de gestion du profil utilisateur.
-- Le répertoire **match-api** contiendra le microservice pour répondre aux besoins des matchs (*e.g.* matchmaking, combat).
+- Le répertoire **match-api** contiendra le microservice pour répondre aux besoins des matchs (_e.g._ matchmaking, combat).
+
 ## Connaissances acquises
 
-### Typescript 
+### Typescript
 
 - [TypeScript Exercises](https://typescript-exercises.github.io/)
 
@@ -69,7 +70,7 @@ Création et Utilisation de Conteneurs :
 
 ```bash
 docker build -t matchs:v1 .
-docker run --publish 5000:5000/tcp matchs:v1 & 
+docker run --publish 5000:5000/tcp matchs:v1 &
 ```
 
 Exécution d'applications multi-containes :
