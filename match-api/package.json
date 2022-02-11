@@ -10,7 +10,8 @@
     "build": "tsc --project ./",
     "start": "ts-node .",
     "format": "npx eslint src/* --quiet --fix & npx prettier --write .",
-    "watch": "ts-node-dev --respawn -- src/index.ts"
+    "watch": "ts-node-dev --respawn -- src/index.ts",
+    "build-start": "tsc --project ./ && ts-node ."
   },
   "dependencies": {
     "@prisma/client": "3.8.1",
