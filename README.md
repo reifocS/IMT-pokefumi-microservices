@@ -1,0 +1,114 @@
+# pokefumi
+
+Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres Pokémon mais les règles ne sont pas exactement celles du jeu classique.
+
+## Besoins
+
+1. [ ] En tant que joueur, je peux …
+
+   1. [x] m'inscrire à la plateforme avec un nom d'utilisateur unique.
+   2. [x] me connecter à la plateforme utilisant mon nom d’utilisateur et un mot de passe
+   3. [x] voir la liste de joueurs (avec leur score)
+   4. [x] voir la liste de matchs
+   5. [x] voir les détails d’un match: joueurs, Pokémons utilisés, etc
+   6. [x] inviter un autre joueur à un match (creer un match)
+   7. [x] consulter les invitations reçues
+   8. [x] accepter une invitation à un match (joindre un match existant)
+   9. [x] créer un deck pour un match
+   10. [x] envoyer un Pokémon à l’arena et consulter le résultat du combat (le joueur n'envoie pas un Pokémon en particulier mais envoie un deck, donc au moins un Pokémon, à l'arena)
+
+2. [ ] En tant qu’administrateur, je peux …
+
+   1. [x] me connecter à la plateforme utilisant mon nom d’utilisateur et un mot de passe
+   2. [x] voir la liste de joueurs
+   3. [x] voir la liste de matchs
+   4. [ ] effacer et modifier les joueurs et les matchs
+   5. [ ] consulter les statistiques de la plateforme : nombre de matchs par jour, nombre de matchs par pokemon, nombre de victoires par pokemon, etc
+
+TODO :
+
+- ajouter un proxy avec l'authentification ([Krakend](https://www.krakend.io/docs/endpoints/sequential-proxy/)) ou sans ([Nginx](https://docs.nginx.com/))
+- ajouter un service de statistiques générés à partir de log, avec [kafka](https://hevodata.com/learn/apache-kafka-logs-a-comprehensive-guide/) ou [Elastic Stack](https://docs.microsoft.com/en-us/dotnet/architecture/cloud-native/logging-with-elastic-stack).
+
+## Ressources
+
+### Diagramme d'intégration
+
+TODO : mettre à jour le diagramme de base de données (ajouter pgsql à distance et sqlite en local)
+TODO : mettre à jour le diagramme de base de données (ajouter pgsql à distance et sqlite en local)
+
+<p><img alt="integration schema" src="./doc/img/integration-schema.png" width="500"></p>
+
+### Diagramme de base de données
+
+<p><img alt="database schema" src="./doc/img/database-schema.png" width="500"></p>
+
+## Structure des dossiers
+
+- Le répertoire **users-api** contiendra le microservice pour répondre aux besoins de connexions et de gestion du profil utilisateur.
+- Le répertoire **match-api** contiendra le microservice pour répondre aux besoins des matchs (_e.g._ matchmaking, combat).
+- Le répertoire **proxy** contiendra les configurations pour le proxy.
+
+## Connaissances acquises
+
+### Typescript
+
+- [TypeScript Exercises](https://typescript-exercises.github.io/)
+
+### Formatting
+
+- [How to add ESLint and Prettier to a React TypeScript Project (2022) | by André Borba Netto Assis | JavaScript in Plain English](https://javascript.plainenglish.io/setting-eslint-and-prettier-on-a-react-typescript-project-2021-22993565edf9)
+
+### Principes des microservices
+
+- [Les microservices, qu'est-ce que c'est ?](https://www.redhat.com/fr/topics/microservices/what-are-microservices)
+- [Microservice Architecture — Learn, Build, and Deploy Applications - DZone Microservices](https://dzone.com/articles/microservice-architecture-learn-build-and-deploy-a)
+
+### Prisma database
+
+- [Getting started with Prisma, the best TypeScript ORM | by Dries Augustyns | CodeX | Medium](https://medium.com/codex/getting-started-with-the-best-typescript-orm-e0655dd3966)
+- [Database connectors | Prisma Docs](https://www.prisma.io/docs/concepts/database-connectors)
+
+### Docker
+
+- [Que sont les conteneurs ? | Atlassian](https://www.atlassian.com/fr/continuous-delivery/microservices/containers)
+- [Visual Studio Code Remote Development](https://code.visualstudio.com/docs/remote/remote-overview)
+- [Docker Nodejs Tutorial](https://docs.docker.com/language/nodejs/)
+
+#### To launch our application
+
+Executer les commandes suivantes à la racine du répertoire
+
+```bash
+docker compose build
+docker compose up
+```
+
+#### Docker commandes
+
+Création et Utilisation d'un seul conteneur :
+
+```bash
+docker build -t matchs:v1 .
+docker run --publish 5000:5000/tcp matchs:v1 &
+```
+
+Exécution d'applications multi-containeurs :
+
+```bash
+docker compose build # à faire que si l'on modifie les dockers files
+docker compose up # start et monopolisation du shell (on Ctrl+C avant de relancer le shell)
+docker compose start # start et rend la main sur le shell après (on peut restart facilement)
+docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour le )
+```
+
+Autres commandes :
+
+| Commands                               | Purposes                                     |
+| -------------------------------------- | -------------------------------------------- |
+| `docker ps`                            | List running containers                      |
+| `docker images`                        | List local images                            |
+| `docker rmi <*ImageName>*`             | Remove an image from local registry          |
+| `docker pull [*ImageName:tag]*`        | Download an image from registry (docker hub) |
+| `docker exec -it <*ContainerId>* bash` | Access running container (command line)      |
+| `docker stop <*ContainerId>*`          | Stop a running container                     |

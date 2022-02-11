@@ -8,7 +8,9 @@
     "prebuild": "tsc --build --clean",
     "build": "tsc --project ./",
     "start": "ts-node .",
-    "format": "npx eslint src/* --quiet --fix & npx prettier --write ."
+    "format": "npx eslint src/* --quiet --fix & npx prettier --write .",
+    "watch": "ts-node-dev --respawn -- src/index.ts",
+    "build-start": "tsc --project ./ && ts-node ."
   },
   "dependencies": {
     "@prisma/client": "^3.8.1",
@@ -34,6 +36,7 @@
     "prettier": "2.5.1",
     "prisma": "3.8.1",
     "ts-node": "10.4.0",
+    "ts-node-dev": "^1.1.8",
     "typescript": "4.5.4"
   },
   "prisma": {

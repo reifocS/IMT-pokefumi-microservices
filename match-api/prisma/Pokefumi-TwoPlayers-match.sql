@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS "Match" CASCADE;
 DROP TABLE IF EXISTS "Round" CASCADE;
+DROP TABLE IF EXISTS "Invitation" CASCADE;
 DROP TYPE IF EXISTS "MatchStatus" CASCADE;
 CREATE TYPE "MatchStatus" AS ENUM ('pending', 'started', 'finished');
 CREATE TABLE "Match" (
