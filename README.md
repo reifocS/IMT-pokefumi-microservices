@@ -25,9 +25,17 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
    4. [ ] effacer et modifier les joueurs et les matchs
    5. [ ] consulter les statistiques de la plateforme : nombre de matchs par jour, nombre de matchs par pokemon, nombre de victoires par pokemon, etc
 
+TODO :
+
+- ajouter un proxy avec l'authentification ([Krakend](https://www.krakend.io/docs/endpoints/sequential-proxy/)) ou sans ([Nginx](https://docs.nginx.com/))
+- ajouter un service de statistiques générés à partir de log, avec [kafka](https://hevodata.com/learn/apache-kafka-logs-a-comprehensive-guide/) ou [Elastic Stack](https://docs.microsoft.com/en-us/dotnet/architecture/cloud-native/logging-with-elastic-stack).
+
 ## Ressources
 
 ### Diagramme d'intégration
+
+TODO : mettre à jour le diagramme de base de données (ajouter pgsql à distance et sqlite en local)
+TODO : mettre à jour le diagramme de base de données (ajouter pgsql à distance et sqlite en local)
 
 <p><img alt="integration schema" src="./doc/img/integration-schema.png" width="500"></p>
 
@@ -39,6 +47,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 - Le répertoire **users-api** contiendra le microservice pour répondre aux besoins de connexions et de gestion du profil utilisateur.
 - Le répertoire **match-api** contiendra le microservice pour répondre aux besoins des matchs (_e.g._ matchmaking, combat).
+- Le répertoire **proxy** contiendra les configurations pour le proxy.
 
 ## Connaissances acquises
 
@@ -66,17 +75,31 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 - [Visual Studio Code Remote Development](https://code.visualstudio.com/docs/remote/remote-overview)
 - [Docker Nodejs Tutorial](https://docs.docker.com/language/nodejs/)
 
-Création et Utilisation de Conteneurs :
+#### To launch our application
+
+Executer les commandes suivantes à la racine du répertoire
+
+```bash
+docker compose build
+docker compose up
+```
+
+#### Docker commandes
+
+Création et Utilisation d'un seul conteneur :
 
 ```bash
 docker build -t matchs:v1 .
 docker run --publish 5000:5000/tcp matchs:v1 &
 ```
 
-Exécution d'applications multi-containes :
+Exécution d'applications multi-containeurs :
 
 ```bash
-docker-compose up --build
+docker compose build # à faire que si l'on modifie les dockers files
+docker compose up # start et monopolisation du shell (on Ctrl+C avant de relancer le shell)
+docker compose start # start et rend la main sur le shell après (on peut restart facilement)
+docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour le )
 ```
 
 Autres commandes :

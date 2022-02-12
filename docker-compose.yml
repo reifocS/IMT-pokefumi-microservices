@@ -3,11 +3,15 @@ services:
   match:
     build: ./match-api
     volumes:
-      - ./match-api:/match/src/
+      - ./match-api/src:/match-api/src
+    ports:
+      - "3100:3100"
     depends_on:
       - user
 
   user:
     build: ./users-api
     volumes:
-      - ./users-api:/usr/src
+      - ./users-api/src:/users-api/src
+    ports:
+      - "3000:3000"
