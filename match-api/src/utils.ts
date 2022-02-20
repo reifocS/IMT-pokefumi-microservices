@@ -193,16 +193,14 @@ async function getPokemonDamage(pokemon: Pokemon): Promise<Damage> {
     noDamageTo: new Set<Type>(),
   };
   for (const type of types) {
-    getDamageFromType(type).then((damageNew: Damage) => {
-      let attribute: keyof typeof damage;
-      for (attribute in damage) {
-        damage[attribute].forEach(
-          damageNew[attribute].add,
-          damageNew[attribute]
-        );
-      }
-    });
+    let attribute: keyof typeof damage;
+    const damageNew: Damage = await getDamageFromType(type);
+    // to add damageNew attribute into damage
+    for (attribute in damage) {
+      damage[attribute].forEach(damageNew[attribute].add, damageNew[attribute]);
+    }
   }
+  //TODO should await all process above before return damage
   return damage;
 }
 
