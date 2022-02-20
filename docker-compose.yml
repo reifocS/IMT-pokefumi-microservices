@@ -19,7 +19,7 @@ services:
     volumes:
       - ./proxy:/etc/nginx:ro
     ports:
-      - "80:80"
+      - "8080:8080"
     depends_on:
       - user
       - match
