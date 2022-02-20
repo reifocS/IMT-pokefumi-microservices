@@ -27,7 +27,6 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 **TODO requirements :**
 
-- ajouter un proxy avec l'authentification ([Krakend](https://www.krakend.io/docs/endpoints/sequential-proxy/)) ou sans ([Nginx](https://docs.nginx.com/))
 - ajouter un service de statistiques générés à partir de log, avec [kafka](https://hevodata.com/learn/apache-kafka-logs-a-comprehensive-guide/) ou [Elastic Stack](https://docs.microsoft.com/en-us/dotnet/architecture/cloud-native/logging-with-elastic-stack).
 
 ## Ressources
@@ -116,6 +115,12 @@ sequenceDiagram
 
 - [Getting started with Prisma, the best TypeScript ORM | by Dries Augustyns | CodeX | Medium](https://medium.com/codex/getting-started-with-the-best-typescript-orm-e0655dd3966)
 - [Database connectors | Prisma Docs](https://www.prisma.io/docs/concepts/database-connectors)
+
+### Proxy
+
+- [Vidéo sur la comparaison d'un proxy et d'un reverse proxy](https://www.youtube.com/watch?v=MpP02aZPSNQ)
+- [Comparaison des méthodes de reverse proxing with nginx](http://sawers.com/blog/reverse-proxying-with-nginx/)
+- [nginx.conf example](https://www.nginx.com/resources/wiki/start/topics/examples/full/)
 
 ### Docker
 
