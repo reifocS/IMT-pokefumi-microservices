@@ -34,12 +34,58 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 ### Diagramme d'intégration
 
-**TODO mettre à jour le diagramme :**
+```mermaid
+graph TB
+    subgraph Légende
+    A((Humain))
+    S_I{{Service interne}}
+    S_E[Service externe]
+    D[(Base de données)]
+    end
+```
 
-- ajouter pgsql à distance et sqlite en local
-- chemin du token
+```mermaid
+graph LR
+    %%variable
+    U((Utilisateur))
+    S_U{{Service des profils<br/><br/>- Login, Logout<br/>- Gestion des decks}}
+    D_U[(SQLite<br/><br/>- Profil<br/>- Deck)]
+    S_M{{Service des matchs<br/><br/>- Combat<br/>- Invitation}}
+    D_M[(pgSQL<br/><br/>- Match<br/>- Round)]
+    S_P[Service Poke-API]
+    %%relation
+    S_U --- D_U
+    U --->|Reverse Proxy| S_U & S_M ---> S_P
+    S_M --- D_M
+    %%structure
+    subgraph Pokefumi
+    S_U
+    D_U
+    S_M
+    D_M
+    end
+```
 
 <p><img alt="integration schema" src="./doc/img/integration-schema.png" width="500"></p>
+
+### Sélection du deck pour un match
+
+```mermaid
+sequenceDiagram
+    %%variable
+    actor U as Joueur
+    participant S_U as Service des profils
+    participant S_M as Service des matchs
+    %%sequence
+    U ->> S_U : Connection (Pseudo, Mot de passe)
+    activate S_U
+    S_U -->> U : Token (utilisateur)
+    deactivate S_U
+    U ->>+ S_M : Choix du deck pour un match (Deck, Match, Token)
+    S_M ->>+ S_U : Evaluation du deck (Deck, Token du joueur)
+    S_U -->>- S_M : Validation du propriétaire du deck
+    S_M -->>- U : Confirmation du choix du deck
+```
 
 ### Diagramme de base de données
 
@@ -148,7 +194,7 @@ docker run --publish 5000:3000/tcp matchs:v1 # permettant d'autoriser le transfe
 docker compose build # à faire que si l'on modifie les dockers files
 docker compose up # start et monopolisation du shell (on Ctrl+C avant de relancer le shell)
 docker compose start # start et rend la main sur le shell après (on peut restart facilement)
-docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour le )
+docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour l'architecture docker)
 ```
 
 ##### Autres commandes

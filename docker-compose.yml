@@ -1,5 +1,11 @@
+version: "3.9"  # optional since v1.27.0
 services:
-
+  user:
+    build: ./users-api
+    volumes:
+      - ./users-api/src:/users-api/src
+    ports:
+      - "3000:3000"
   match:
     build: ./match-api
     volumes:
@@ -8,10 +14,12 @@ services:
       - "3100:3100"
     depends_on:
       - user
-
-  user:
-    build: ./users-api
+  proxy:
+    image: nginx
     volumes:
-      - ./users-api/src:/users-api/src
+      - ./proxy:/etc/nginx:ro
     ports:
-      - "3000:3000"
+      - "80:80"
+    depends_on:
+      - user
+      - match
