@@ -358,22 +358,30 @@ app.get("/round/:id", async (req, res) => {
   res.json(roundData);
 });
 
+/**
+ * which pokemonId is the best
+ */
 app.get("/stronger", async (req, res) => {
   try {
-    const { pokemonId1, pokemonId2 } = req.body;
+    if (req?.query?.pokemonId?.length !== 2) {
+      throw new Error("Invalid number of pokemonId given");
+    }
+    const pokemonId1 = Number((req?.query?.pokemonId as any)[0]);
+    const pokemonId2 = Number((req?.query?.pokemonId as any)[1]);
     const pokemon1 = getPokemonById(pokemonId1);
     const pokemon2 = getPokemonById(pokemonId2);
-    Promise.all([pokemon1, pokemon2]).then((pokemons: Pokemon[]) => {
+
+    Promise.all([pokemon1, pokemon2]).then(async (pokemons: Pokemon[]) => {
       if (
         pokemons.length === 2 &&
         pokemons[0] !== undefined &&
         pokemons[1] !== undefined
       ) {
-        getStronger(pokemons[0]!, pokemons[1]!).then(
-          (pokemon: Pokemon | undefined) => {
-            res.json({ winner: pokemon?.toString() });
-          }
+        const pokemon: Pokemon | undefined = await getStronger(
+          pokemons[0],
+          pokemons[1]
         );
+        res.json({ winner: pokemon?.toString() });
       } else {
         throw new Error("Pokemon not found with the given id");
       }
