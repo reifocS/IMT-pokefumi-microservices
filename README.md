@@ -55,7 +55,7 @@ graph LR
     S_P[Service Poke-API]
     %%relation
     S_U --- D_U
-    U --->|Proxy| S_U & S_M ---> S_P
+    U --->|Reverse Proxy| S_U & S_M ---> S_P
     S_M --- D_M
     %%structure
     subgraph Pokefumi
@@ -194,7 +194,7 @@ docker run --publish 5000:3000/tcp matchs:v1 # permettant d'autoriser le transfe
 docker compose build # à faire que si l'on modifie les dockers files
 docker compose up # start et monopolisation du shell (on Ctrl+C avant de relancer le shell)
 docker compose start # start et rend la main sur le shell après (on peut restart facilement)
-docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour le )
+docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour l'architecture docker)
 ```
 
 ##### Autres commandes

@@ -1,6 +1,11 @@
 version: "3.9"  # optional since v1.27.0
 services:
-
+  user:
+    build: ./users-api
+    volumes:
+      - ./users-api/src:/users-api/src
+    ports:
+      - "3000:3000"
   match:
     build: ./match-api
     volumes:
@@ -9,14 +14,6 @@ services:
       - "3100:3100"
     depends_on:
       - user
-    command: npm run debug-docker
-  user:
-    build: ./users-api
-    volumes:
-      - ./users-api/src:/users-api/src
-    ports:
-      - "3000:3000"
-    command: npm run debug-docker
   proxy:
     image: nginx
     volumes:
@@ -24,5 +21,5 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - users
+      - user
       - match
