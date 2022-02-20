@@ -4,14 +4,10 @@ services:
     build: ./users-api
     volumes:
       - ./users-api/src:/users-api/src
-    ports:
-      - "3000:3000"
   match:
     build: ./match-api
     volumes:
       - ./match-api/src:/match-api/src
-    ports:
-      - "3100:3100"
     depends_on:
       - user
   proxy:
