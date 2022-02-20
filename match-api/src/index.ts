@@ -124,7 +124,7 @@ app.post(`/match`, async (req, res) => {
 
 app.put(`/match/:id/selectDeck`, async (req, res) => {
   const { deckId } = req.body;
-  const { user } = (req as any).user.id;
+  const userId = (req as any).user.id;
   const { id } = req.params;
   try {
     const matchData = prisma.match.findUnique({
@@ -136,14 +136,14 @@ app.put(`/match/:id/selectDeck`, async (req, res) => {
       if (matchData?.owner_id == null || matchData?.opponent_id == null) {
         throw new Error("Match data uncompleted");
       }
-      if (matchData.owner_id !== user && matchData.opponent_id !== user) {
+      if (matchData.owner_id !== userId && matchData.opponent_id !== userId) {
         throw new Error("Not a player from the match.");
       }
-      if (deck?.author.id !== user) {
+      if (deck?.authorId !== userId) {
         throw new Error("Not a deck from the player.");
       }
 
-      const isOwner: boolean = matchData?.owner_id !== user;
+      const isOwner: boolean = matchData?.owner_id === userId;
       const prop = isOwner ? "owner_deck_id" : "opponent_deck_id";
       matchData[prop] = deck?.id;
 
