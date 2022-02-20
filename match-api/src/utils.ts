@@ -36,15 +36,17 @@ async function getStronger(
     const type0: Type[] = getPokemonType(pokemon0);
     const type1: Type[] = getPokemonType(pokemon1);
     Promise.all([damage0, damage1]).then((damages) => {
-      const damagesTo0 = getDamageTo(damages[0], type1);
-      const damagesTo1 = getDamageTo(damages[1], type0);
-      // eslint-disable-next-line prettier/prettier
-      return damagesTo0 > damagesTo1
-        ? pokemon1
-        : // eslint-disable-next-line prettier/prettier
-        damagesTo0 < damagesTo1
-        ? pokemon0
-        : undefined;
+      if (damages[0] !== undefined && damages[1] !== undefined) {
+        const damagesTo0 = getDamageTo(damages[0], type1);
+        const damagesTo1 = getDamageTo(damages[1], type0);
+        // eslint-disable-next-line prettier/prettier
+        return damagesTo0 > damagesTo1
+          ? pokemon1
+          : // eslint-disable-next-line prettier/prettier
+          damagesTo0 < damagesTo1
+          ? pokemon0
+          : undefined;
+      }
     });
   } catch (error) {
     console.log(error);
@@ -181,27 +183,38 @@ function getDamageFromType(type: Type): Promise<Damage> {
   });
 }
 
-async function getPokemonDamage(pokemon: Pokemon): Promise<Damage> {
-  const types: Type[] = getPokemonType(pokemon);
-  // eslint-disable-next-line prefer-const
-  let damage: Damage = {
-    doubleDamageFrom: new Set<Type>(),
-    doubleDamageTo: new Set<Type>(),
-    halfDamageFrom: new Set<Type>(),
-    halfDamageTo: new Set<Type>(),
-    noDamageFrom: new Set<Type>(),
-    noDamageTo: new Set<Type>(),
-  };
-  for (const type of types) {
-    let attribute: keyof typeof damage;
-    const damageNew: Damage = await getDamageFromType(type);
-    // to add damageNew attribute into damage
-    for (attribute in damage) {
-      damage[attribute].forEach(damageNew[attribute].add, damageNew[attribute]);
+async function getPokemonDamage(pokemon: Pokemon): Promise<Damage | undefined> {
+  try {
+    const types: Type[] = getPokemonType(pokemon);
+    // eslint-disable-next-line prefer-const
+    let damagesFromAllTypes: Promise<Damage>[] = [];
+    // eslint-disable-next-line prefer-const
+    let damageAll: Damage = {
+      doubleDamageFrom: new Set<Type>(),
+      doubleDamageTo: new Set<Type>(),
+      halfDamageFrom: new Set<Type>(),
+      halfDamageTo: new Set<Type>(),
+      noDamageFrom: new Set<Type>(),
+      noDamageTo: new Set<Type>(),
+    };
+    for (const type of types) {
+      damagesFromAllTypes.push(getDamageFromType(type));
     }
+
+    Promise.all(damagesFromAllTypes).then((damagesFromAllTypes) => {
+      damagesFromAllTypes.forEach((damage) => {
+        // to add damage set attribute into damageAll one
+        let set: keyof typeof damageAll;
+        for (set in damage) {
+          damageAll[set].forEach(damage[set].add, damage[set]);
+        }
+      });
+      return damageAll;
+    });
+  } catch (error) {
+    console.log(error);
+    return Promise.resolve(undefined);
   }
-  //TODO should await all process above before return damage
-  return damage;
 }
 
 export {
