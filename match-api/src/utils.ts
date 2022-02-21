@@ -189,7 +189,7 @@ async function getPokemonDamage(pokemon: Pokemon): Promise<Damage | undefined> {
     // eslint-disable-next-line prefer-const
     let damagesFromAllTypes: Promise<Damage>[] = [];
     // eslint-disable-next-line prefer-const
-    let damageAll: Damage = {
+    let damageAll = {
       doubleDamageFrom: new Set<Type>(),
       doubleDamageTo: new Set<Type>(),
       halfDamageFrom: new Set<Type>(),
@@ -207,11 +207,12 @@ async function getPokemonDamage(pokemon: Pokemon): Promise<Damage | undefined> {
           // to add damage set attribute into damageAll one
           let set: keyof typeof damageAll;
           for (set in damage) {
-            const damageType = damage[set];
+            const damageTypeSet = damage[set];
+            const damageTypeArray = Array.from(damageTypeSet.values());
             // const damageAllType = damageAll[set];
             // damageAll[set] = new Set([...damageAllType, ...damageType]);
             // damageAll[set].forEach(damage[set].add, damage[set]);
-            for (const item of damageType) {
+            for (const item of damageTypeArray) {
               damageAll[set].add(item);
             }
           }
