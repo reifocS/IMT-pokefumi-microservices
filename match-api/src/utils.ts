@@ -39,13 +39,11 @@ async function getStronger(
       if (damages[0] !== undefined && damages[1] !== undefined) {
         const damagesTo0 = getDamageTo(damages[0], type1);
         const damagesTo1 = getDamageTo(damages[1], type0);
-        // eslint-disable-next-line prettier/prettier
-        return damagesTo0 > damagesTo1
-          ? pokemon1
-          : // eslint-disable-next-line prettier/prettier
-          damagesTo0 < damagesTo1
-            ? pokemon0
-            : undefined;
+        if (damagesTo0 > damagesTo1) {
+          return pokemon1;
+        } else {
+          return damagesTo0 === damagesTo1 ? undefined : pokemon0;
+        }
       }
     });
   } catch (error) {
