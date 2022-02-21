@@ -35,7 +35,7 @@ async function getStronger(
     const damage1 = getPokemonDamage(pokemon1);
     const type0: Type[] = getPokemonType(pokemon0);
     const type1: Type[] = getPokemonType(pokemon1);
-    Promise.all([damage0, damage1]).then((damages) => {
+    await Promise.all([damage0, damage1]).then((damages) => {
       if (damages[0] !== undefined && damages[1] !== undefined) {
         const damagesTo0 = getDamageTo(damages[0], type1);
         const damagesTo1 = getDamageTo(damages[1], type0);
@@ -44,8 +44,8 @@ async function getStronger(
           ? pokemon1
           : // eslint-disable-next-line prettier/prettier
           damagesTo0 < damagesTo1
-          ? pokemon0
-          : undefined;
+            ? pokemon0
+            : undefined;
       }
     });
   } catch (error) {
@@ -201,16 +201,25 @@ async function getPokemonDamage(pokemon: Pokemon): Promise<Damage | undefined> {
       damagesFromAllTypes.push(getDamageFromType(type));
     }
 
-    Promise.all(damagesFromAllTypes).then((damagesFromAllTypes) => {
-      damagesFromAllTypes.forEach((damage) => {
-        // to add damage set attribute into damageAll one
-        let set: keyof typeof damageAll;
-        for (set in damage) {
-          damageAll[set].forEach(damage[set].add, damage[set]);
-        }
+    await Promise.all(damagesFromAllTypes)
+      .then((damagesFromAllTypes) => {
+        damagesFromAllTypes.forEach((damage) => {
+          // to add damage set attribute into damageAll one
+          let set: keyof typeof damageAll;
+          for (set in damage) {
+            const damageType = damage[set];
+            // const damageAllType = damageAll[set];
+            // damageAll[set] = new Set([...damageAllType, ...damageType]);
+            // damageAll[set].forEach(damage[set].add, damage[set]);
+            for (const item of damageType) {
+              damageAll[set].add(item);
+            }
+          }
+        });
+      })
+      .then(() => {
+        return damageAll;
       });
-      return damageAll;
-    });
   } catch (error) {
     console.log(error);
     return Promise.resolve(undefined);

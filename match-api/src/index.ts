@@ -377,11 +377,9 @@ app.get("/stronger", async (req, res) => {
         pokemons[0] !== undefined &&
         pokemons[1] !== undefined
       ) {
-        const pokemon: Pokemon | undefined = await getStronger(
-          pokemons[0],
-          pokemons[1]
-        );
-        res.json({ winner: pokemon?.toString() });
+        await getStronger(pokemons[0], pokemons[1]).then((pokemon) => {
+          res.json({ winner: pokemon?.toString() });
+        });
       } else {
         throw new Error("Pokemon not found with the given id");
       }
