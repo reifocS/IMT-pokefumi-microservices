@@ -199,26 +199,23 @@ async function getPokemonDamage(pokemon: Pokemon): Promise<Damage | undefined> {
       damagesFromAllTypes.push(getDamageFromType(type));
     }
 
-    await Promise.all(damagesFromAllTypes)
-      .then((damagesFromAllTypes) => {
-        damagesFromAllTypes.forEach((damage) => {
-          // to add damage set attribute into damageAll one
-          let set: keyof typeof damageAll;
-          for (set in damage) {
-            const damageTypeSet = damage[set];
-            const damageTypeArray = Array.from(damageTypeSet.values());
-            // const damageAllType = damageAll[set];
-            // damageAll[set] = new Set([...damageAllType, ...damageType]);
-            // damageAll[set].forEach(damage[set].add, damage[set]);
-            for (const item of damageTypeArray) {
-              damageAll[set].add(item);
-            }
+    await Promise.all(damagesFromAllTypes).then((damagesFromAllTypes) => {
+      damagesFromAllTypes.forEach((damage) => {
+        // to add damage set attribute into damageAll one
+        let set: keyof typeof damageAll;
+        for (set in damage) {
+          const damageTypeSet = damage[set];
+          const damageTypeArray = Array.from(damageTypeSet.values());
+          // const damageAllType = damageAll[set];
+          // damageAll[set] = new Set([...damageAllType, ...damageType]);
+          // damageAll[set].forEach(damage[set].add, damage[set]);
+          for (const item of damageTypeArray) {
+            damageAll[set].add(item);
           }
-        });
-      })
-      .then(() => {
-        return damageAll;
+        }
       });
+    });
+    return damageAll;
   } catch (error) {
     console.log(error);
     return Promise.resolve(undefined);
