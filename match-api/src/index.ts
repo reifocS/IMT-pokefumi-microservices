@@ -371,21 +371,20 @@ app.get("/stronger", async (req, res) => {
     const pokemon1 = getPokemonById(pokemonId1);
     const pokemon2 = getPokemonById(pokemonId2);
 
-    Promise.all([pokemon1, pokemon2]).then(async (pokemons: Pokemon[]) => {
-      if (
-        pokemons.length === 2 &&
-        pokemons[0] !== undefined &&
-        pokemons[1] !== undefined
-      ) {
-        Promise.resolve(getStronger(pokemons[0], pokemons[1])).then(
-          (pokemon) => {
-            res.json(pokemon?.id);
-          }
-        );
-      } else {
-        throw new Error("Pokemon not found with the given id");
+    await Promise.all([pokemon1, pokemon2]).then(
+      async (pokemons: Pokemon[]) => {
+        if (
+          pokemons.length === 2 &&
+          pokemons[0] !== undefined &&
+          pokemons[1] !== undefined
+        ) {
+          const stronger = await getStronger(pokemons[0], pokemons[1]);
+          res.json(stronger?.id);
+        } else {
+          throw new Error("Pokemon not found with the given id");
+        }
       }
-    });
+    );
   } catch (error) {
     console.log(error);
     res.json({ error: error });

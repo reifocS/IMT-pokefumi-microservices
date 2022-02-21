@@ -30,6 +30,7 @@ async function getStronger(
   pokemon0: Pokemon,
   pokemon1: Pokemon
 ): Promise<Pokemon | undefined> {
+  let pokemon: Pokemon | undefined;
   try {
     const damage0 = getPokemonDamage(pokemon0);
     const damage1 = getPokemonDamage(pokemon1);
@@ -40,15 +41,16 @@ async function getStronger(
         const damagesTo0 = getDamageTo(damages[0], type1);
         const damagesTo1 = getDamageTo(damages[1], type0);
         if (damagesTo0 > damagesTo1) {
-          return pokemon1;
+          pokemon = pokemon1;
         } else {
-          return damagesTo0 === damagesTo1 ? undefined : pokemon0;
+          pokemon = damagesTo0 === damagesTo1 ? undefined : pokemon0;
         }
       }
     });
+    return pokemon;
   } catch (error) {
     console.log(error);
-    return Promise.resolve(undefined);
+    return undefined;
   }
 }
 
