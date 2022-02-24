@@ -124,7 +124,7 @@ app.post(`/match`, async (req, res) => {
 
 app.put(`/match/:id/selectDeck`, async (req, res) => {
   const { deckId } = req.body;
-  const { user } = (req as any).user.id;
+  const userId = (req as any).user.id;
   const { id } = req.params;
   try {
     const matchData = prisma.match.findUnique({
@@ -136,14 +136,14 @@ app.put(`/match/:id/selectDeck`, async (req, res) => {
       if (matchData?.owner_id == null || matchData?.opponent_id == null) {
         throw new Error("Match data uncompleted");
       }
-      if (matchData.owner_id !== user && matchData.opponent_id !== user) {
+      if (matchData.owner_id !== userId && matchData.opponent_id !== userId) {
         throw new Error("Not a player from the match.");
       }
-      if (deck?.author.id !== user) {
+      if (deck?.authorId !== userId) {
         throw new Error("Not a deck from the player.");
       }
 
-      const isOwner: boolean = matchData?.owner_id !== user;
+      const isOwner: boolean = matchData?.owner_id === userId;
       const prop = isOwner ? "owner_deck_id" : "opponent_deck_id";
       matchData[prop] = deck?.id;
 
@@ -358,26 +358,33 @@ app.get("/round/:id", async (req, res) => {
   res.json(roundData);
 });
 
+/**
+ * which pokemonId is the best
+ */
 app.get("/stronger", async (req, res) => {
   try {
-    const { pokemonId1, pokemonId2 } = req.body;
+    if (req?.query?.pokemonId?.length !== 2) {
+      throw new Error("Invalid number of pokemonId given");
+    }
+    const pokemonId1 = Number((req?.query?.pokemonId as any)[0]);
+    const pokemonId2 = Number((req?.query?.pokemonId as any)[1]);
     const pokemon1 = getPokemonById(pokemonId1);
     const pokemon2 = getPokemonById(pokemonId2);
-    Promise.all([pokemon1, pokemon2]).then((pokemons: Pokemon[]) => {
-      if (
-        pokemons.length === 2 &&
-        pokemons[0] !== undefined &&
-        pokemons[1] !== undefined
-      ) {
-        getStronger(pokemons[0]!, pokemons[1]!).then(
-          (pokemon: Pokemon | undefined) => {
-            res.json({ winner: pokemon?.toString() });
-          }
-        );
-      } else {
-        throw new Error("Pokemon not found with the given id");
+
+    await Promise.all([pokemon1, pokemon2]).then(
+      async (pokemons: Pokemon[]) => {
+        if (
+          pokemons.length === 2 &&
+          pokemons[0] !== undefined &&
+          pokemons[1] !== undefined
+        ) {
+          const stronger = await getStronger(pokemons[0], pokemons[1]);
+          res.json(stronger?.id);
+        } else {
+          throw new Error("Pokemon not found with the given id");
+        }
       }
-    });
+    );
   } catch (error) {
     console.log(error);
     res.json({ error: error });
