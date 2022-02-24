@@ -66,6 +66,7 @@ app.post("/signup", async (req, res) => {
     });
     res.json(result);
   } catch (error) {
+    // TODO add error code for unique constraint
     console.log(error);
     res.json({ error: error });
   }
@@ -74,35 +75,35 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-  const users = await prisma.user.findMany({
-    where: {
-      username: {
-        equals: username,
+    const users = await prisma.user.findMany({
+      where: {
+        username: {
+          equals: username,
+        },
+        password: {
+          equals: password, // Default mode
+        },
       },
-      password: {
-        equals: password, // Default mode
-      },
-    },
-  });
-  if (users.length > 0) {
-    const user = users[0];
-    const token: any = jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-      },
-      process.env.SECRET,
-      { expiresIn: "24h" }
-    );
-    res.cookie("token", token, { httpOnly: true });
-    user.password = "";
-    res.json(user);
-  } else {
-    res.sendStatus(404);
-  }
+    });
+    if (users.length > 0) {
+      const user = users[0];
+      const token: any = jwt.sign(
+        {
+          id: user.id,
+          username: user.username,
+        },
+        process.env.SECRET,
+        { expiresIn: "24h" }
+      );
+      res.cookie("token", token, { httpOnly: true });
+      user.password = "";
+      res.json(user);
+    } else {
+      res.sendStatus(404);
+    }
   } catch (error) {
     console.log(error);
-    res.json({ error: error });
+    res.sendStatus(404);
   }
 });
 
