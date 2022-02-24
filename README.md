@@ -22,12 +22,44 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
    1. [x] me connecter à la plateforme utilisant mon nom d’utilisateur et un mot de passe
    2. [x] voir la liste de joueurs
    3. [x] voir la liste de matchs
-   4. [ ] effacer et modifier les joueurs et les matchs
+   4. [x] effacer et modifier les joueurs et les matchs
    5. [ ] consulter les statistiques de la plateforme : nombre de matchs par jour, nombre de matchs par pokemon, nombre de victoires par pokemon, etc
 
 **TODO requirements :**
 
 - ajouter un service de statistiques générés à partir de log, avec [kafka](https://hevodata.com/learn/apache-kafka-logs-a-comprehensive-guide/) ou [Elastic Stack](https://docs.microsoft.com/en-us/dotnet/architecture/cloud-native/logging-with-elastic-stack).
+
+## Comment utiliser l'application
+
+### Installation
+
+#### 1. Ajout les variables d'environnement
+
+A la racine des dossiers suivants : `users-api` et `match-api` ajouter pour des fichiers `.env` comportant les informations suivantes : 
+
+```txt
+DATABASE_URL="postgres://User:Password@tyke.db.User.com/User?schema=public"
+USERS_API_BASE_URL="http://localhost"
+USERS_API_PORT="3000"
+MATCH_API_BASE_URL="http://localhost"
+MATCH_API_PORT="3100"
+SECRET="an awesome secret for our token"
+```
+
+Pour `DATABASE_URL`, on pourra utiliser des base de données pgSQL proposées par le service suivant : [ElephantSQL - PostgreSQL as a Service](https://www.elephantsql.com/).
+
+#### 2. Exécution des commandes suivantes
+
+```sh
+git clone https://github.com/reifocS/IMT-pokefumi-microservices.git
+cd ./IMT-pokefumi-microservices
+docker compose build
+docker compose up
+```
+
+### Documentation - Requêtes
+
+Des exemples de requêtes sont données pour être exécutées avec l'extension chrome [Open Talend Api teste](https://chrome.google.com/webstore/detail/talend-api-tester-free-ed/aejoelaoggembcahagimdiliamlcdmfm), Celles-ci sont disponibles dans le dossier *[test](https://github.com/reifocS/IMT-pokefumi-microservices/tree/main/test)*.
 
 ## Ressources
 
@@ -48,7 +80,7 @@ graph LR
     %%variable
     U((Utilisateur))
     S_U{{Service des profils<br/><br/>- Login, Logout<br/>- Gestion des decks}}
-    D_U[(SQLite<br/><br/>- Profil<br/>- Deck)]
+    D_U[(pgSQL<br/><br/>- Profil<br/>- Deck)]
     S_M{{Service des matchs<br/><br/>- Combat<br/>- Invitation}}
     D_M[(pgSQL<br/><br/>- Match<br/>- Round)]
     S_P[Service Poke-API]
@@ -64,8 +96,6 @@ graph LR
     D_M
     end
 ```
-
-<p><img alt="integration schema" src="./doc/img/integration-schema.png" width="500"></p>
 
 ### Sélection du deck pour un match
 
