@@ -73,6 +73,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
+  try {
   const users = await prisma.user.findMany({
     where: {
       username: {
@@ -98,6 +99,10 @@ app.post("/login", async (req, res) => {
     res.json(user);
   } else {
     res.sendStatus(404);
+  }
+  } catch (error) {
+    console.log(error);
+    res.json({ error: error });
   }
 });
 
