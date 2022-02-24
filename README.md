@@ -4,7 +4,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 ## Besoins
 
-1. [ ] En tant que joueur, je peux …
+1. [x] En tant que joueur, je peux …
 
    1. [x] m'inscrire à la plateforme avec un nom d'utilisateur unique.
    2. [x] me connecter à la plateforme utilisant mon nom d’utilisateur et un mot de passe
