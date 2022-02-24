@@ -5,6 +5,7 @@ WORKDIR /users-api/
 COPY . .
 
 RUN npm install
+RUN npx prisma db push
 RUN npx prisma generate
 
 COPY prisma prisma

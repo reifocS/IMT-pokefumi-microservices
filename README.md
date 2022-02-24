@@ -65,6 +65,8 @@ graph LR
     end
 ```
 
+Les bases de données utilisées étaient au départ en local avec *SQLite* mais comme ce type de base de donnée ne supporte pas les enumérations alors que ce projet est réalisé en TypeScript qui supporte cette puissante fonctionnalité, nous avons décidé d'utiliser des bases de données de type pqSQL.
+
 <p><img alt="integration schema" src="./doc/img/integration-schema.png" width="500"></p>
 
 ### Sélection du deck pour un match

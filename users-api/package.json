@@ -4,6 +4,7 @@
   "license": "MIT",
   "main": "dist/src/index.js",
   "scripts": {
+    "generate": "npx prisma generate",
     "dev": "ts-node src/index.ts",
     "prebuild": "tsc --build --clean",
     "build": "tsc --project ./",
