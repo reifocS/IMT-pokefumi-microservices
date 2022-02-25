@@ -65,10 +65,16 @@ app.post("/signup", async (req, res) => {
       },
     });
     res.json(result);
-  } catch (error) {
-    // TODO add error code for unique constraint
-    console.log(error);
-    res.json({ error: error });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === "P2002") {
+        res
+          .status(409)
+          .send(
+            "There is a unique constraint violation, a new user cannot be created with this username"
+          );
+      }
+    }
   }
 });
 
@@ -102,8 +108,7 @@ app.post("/login", async (req, res) => {
       res.sendStatus(404);
     }
   } catch (error) {
-    console.log(error);
-    res.sendStatus(404);
+    res.sendStatus(400);
   }
 });
 
@@ -204,6 +209,27 @@ app.get("/deck/:id", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ error: error });
+  }
+});
+
+app.delete("/user/:id", async (req, res) => {
+  const { id } = req.params;
+  const user = (req as any).user;
+  if (!id) {
+    return res.status(400).send("id is missing");
+  }
+  if (!user.admin) {
+    return res.status(403).send("not admin");
+  }
+  try {
+    await prisma.user.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+    res.sendStatus(204);
+  } catch (e) {
+    res.status(500).send(e);
   }
 });
 
