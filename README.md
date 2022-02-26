@@ -1,4 +1,4 @@
-# pokefumi
+# Microservices - PokeFumi
 
 Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres Pokémon mais les règles ne sont pas exactement celles du jeu classique.
 
@@ -35,7 +35,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 #### 1. Ajout les variables d'environnement
 
-A la racine des dossiers suivants : `users-api` et `match-api` ajouter pour des fichiers `.env` comportant les informations suivantes : 
+A la racine des dossiers suivants : `users-api` et `match-api` ajouter des fichiers `.env` comportant les informations suivantes : 
 
 ```txt
 DATABASE_URL="postgres://User:Password@tyke.db.User.com/User?schema=public"
@@ -46,7 +46,7 @@ MATCH_API_PORT="3100"
 SECRET="an awesome secret for our token"
 ```
 
-Pour `DATABASE_URL`, on pourra utiliser des base de données pgSQL proposées par le service suivant : [ElephantSQL - PostgreSQL as a Service](https://www.elephantsql.com/).
+Pour `DATABASE_URL`, on pourra utiliser des bases de données pgSQL proposées par le service suivant : [ElephantSQL - PostgreSQL as a Service](https://www.elephantsql.com/).
 
 #### 2. Exécution des commandes suivantes
 
@@ -98,9 +98,6 @@ graph LR
 ```
 
 Les bases de données utilisées étaient au départ en local avec *SQLite* mais comme ce type de base de donnée ne supporte pas les enumérations alors que ce projet est réalisé en TypeScript qui supporte cette puissante fonctionnalité, nous avons décidé d'utiliser des bases de données de type pqSQL.
-
-<p><img alt="integration schema" src="./doc/img/integration-schema.png" width="500"></p>
-
 ### Sélection du deck pour un match
 
 ```mermaid
