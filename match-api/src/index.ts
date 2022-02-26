@@ -231,6 +231,18 @@ app.get("/matchs/:userId", async (req, res) => {
   }
 });
 
+app.delete("/match/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.match.delete({
+      where: { id: Number(id) },
+    });
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.get("/match/:id", async (req, res) => {
   const { id } = req.params;
   try {
