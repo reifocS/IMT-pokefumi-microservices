@@ -52,6 +52,7 @@ app.get("/pokemon/:id", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
+  // const admin = !!req.body.admin;
   try {
     const result = await prisma.user.create({
       data: {

@@ -233,7 +233,11 @@ app.get("/matchs/:userId", async (req, res) => {
 
 app.delete("/match/:id", async (req, res) => {
   const { id } = req.params;
+  const user = (req as any).user;
   try {
+    if (!user.admin) {
+      return res.status(403).send("not admin");
+    }
     await prisma.match.delete({
       where: { id: Number(id) },
     });
