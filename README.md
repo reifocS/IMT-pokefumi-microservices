@@ -38,7 +38,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 A la racine des dossiers suivants : `users-api` et `match-api` ajouter des fichiers `.env` comportant les informations suivantes : 
 
 ```txt
-DATABASE_URL="postgres://User:Password@tyke.db.User.com/User?schema=public"
+DATABASE_URL="postgres://User:Password@Host.db.User.com/User?schema=public"
 USERS_API_BASE_URL="http://localhost"
 USERS_API_PORT="3000"
 MATCH_API_BASE_URL="http://localhost"
