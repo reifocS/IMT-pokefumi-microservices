@@ -48,6 +48,8 @@ SECRET="an awesome secret for our token"
 
 Pour `DATABASE_URL`, on pourra utiliser des bases de données pgSQL proposées par le service suivant : [ElephantSQL - PostgreSQL as a Service](https://www.elephantsql.com/).
 
+Si le schéma de la base de données est différent de celui indiqué dans les schémas de prisma, une erreur peut survenir. Dans ce cas on pourra remplacer la commande `RUN npx prisma db push` par `RUN npx prisma db push --accept-data-loss` dans les fichiers de configuration docker de [users-api](./users-api/Dockerfile) et de [match-api](./match-api/Dockerfile), mais ceci écrasera les données existantes.
+
 #### 2. Exécution des commandes suivantes
 
 ```sh
@@ -59,7 +61,7 @@ docker compose up
 
 ### Documentation - Requêtes
 
-Des exemples de requêtes sont données pour être exécutées avec l'extension chrome [Open Talend Api teste](https://chrome.google.com/webstore/detail/talend-api-tester-free-ed/aejoelaoggembcahagimdiliamlcdmfm), Celles-ci sont disponibles dans le dossier *[test](https://github.com/reifocS/IMT-pokefumi-microservices/tree/main/test)*.
+Des exemples de requêtes sont données pour être exécutées avec l'extension chrome [Open Talend Api teste](https://chrome.google.com/webstore/detail/talend-api-tester-free-ed/aejoelaoggembcahagimdiliamlcdmfm), Celles-ci sont disponibles dans le dossier *[test](./test/)*.
 
 ## Ressources
 
