@@ -1,4 +1,4 @@
-import { PrismaClient, MatchStatus } from "@prisma/client";
+import { PrismaClient, MatchStatus, Match, Round } from "@prisma/client";
 import { getStronger, getPokemonById, getDeck } from "./utils";
 import express from "express";
 import bodyParser from "body-parser";
@@ -78,7 +78,7 @@ app.put("/match/join/:id", async (req, res) => {
       where: { id: Number(id) || undefined },
       data: {
         opponent_id: user.id,
-        status: "started",
+        status: MatchStatus.accepted,
       },
     });
     if (matchData.Invitation) {
@@ -101,11 +101,10 @@ app.post(`/match`, async (req, res) => {
   // const { opponentId, ownerDeckId, opponentDeckId, Invitation } = req.body;
   const { opponentId, Invitation } = req.body;
   const author = (req as any).user;
-  const status: MatchStatus = "pending";
   try {
     const result = await prisma.match.create({
       data: {
-        status: status,
+        status: MatchStatus.pending,
         owner_id: author.id,
         opponent_id: opponentId,
         // owner_deck_id: ownerDeckId,
@@ -280,13 +279,22 @@ app.get("/match/:id/rounds", async (req, res) => {
   }
 });
 
-app.post("/match/:id/rounds", async (req, res) => {
+/**
+ * @link https://www.prisma.io/docs/guides/general-guides/database-workflows/foreign-keys/postgresql#6-validate-the-foreign-key-constraints-in-a-nodejs-script
+ * @link https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-scalar-lists-arrays#adding-items-to-a-scalar-list
+ * @returns the current state of the match
+ */
+app.post("/match/:id/round", async (req, res) => {
   const { id } = req.params;
 
   try {
     const matchData = await prisma.match.findUnique({
       where: { id: Number(id) },
     });
+
+    if (matchData?.status === MatchStatus.finished) {
+      throw new Error("As the match is finished, no more rounds are allowed");
+    }
 
     if (matchData?.owner_id == null || matchData?.opponent_id == null) {
       throw new Error("At least two players are required");
@@ -304,7 +312,6 @@ app.post("/match/:id/rounds", async (req, res) => {
       throw new Error("At least one of the players has not created a deck");
     }
 
-    // TODO : is it better to ask to the Round table from match ? or to all Rounds ? orm ?
     let turn = 1;
     const roundsData = prisma.round.findMany({
       where: { match_id: Number(id) },
@@ -319,11 +326,18 @@ app.post("/match/:id/rounds", async (req, res) => {
       req.cookies.token
     );
 
-    Promise.all([deck0, deck1, roundsData]).then(
+    await Promise.all([deck0, deck1, roundsData]).then(
       async ([deck0, deck1, roundsData]) => {
         turn += roundsData?.length;
 
-        if (Math.min(deck0.pokemons?.length, deck1?.pokemons?.length) < turn) {
+        const minDeckSize = Math.min(
+          deck0.pokemons?.length,
+          deck1?.pokemons?.length
+        );
+        if (minDeckSize < 1) {
+          throw new Error("At least one of the players has not created a deck");
+        }
+        if (minDeckSize < turn) {
           throw new Error(
             "At least one of the players has not enough cards in its deck to play the round"
           );
@@ -342,22 +356,58 @@ app.post("/match/:id/rounds", async (req, res) => {
           }
         }
 
-        const newRound = await prisma.round.create({
-          data: {
-            Match: { connect: { id: matchData?.id } },
-            owner_poke_id: pokemon0.id,
-            opponent_poke_id: pokemon1.id,
-            turn: turn,
-            winner_id: winnerId,
-          },
-        });
-        res.json(newRound);
-        // TODO : redundancy ?
-        // const newMatchData = matchData?.Round.push(newRound);
-        // prisma.match.update({
-        //   where: { id: Number(id) || undefined },
-        //   data: newMatchData,
-        // });
+        let newMatch: (Match & { Round: Round[] }) | undefined;
+        if (minDeckSize === turn) {
+          newMatch = await prisma.match.update({
+            where: { id: Number(id) },
+            data: {
+              status: MatchStatus.finished,
+              Round: {
+                create: {
+                  owner_poke_id: pokemon0.id,
+                  opponent_poke_id: pokemon1.id,
+                  turn: turn,
+                  winner_id: winnerId,
+                },
+              },
+            },
+            include: { Round: true },
+          });
+        } else {
+          if (turn < 2) {
+            await prisma.match.update({
+              where: { id: Number(id) },
+              data: {
+                status: MatchStatus.started,
+                Round: {
+                  create: {
+                    owner_poke_id: pokemon0.id,
+                    opponent_poke_id: pokemon1.id,
+                    turn: turn,
+                    winner_id: winnerId,
+                  },
+                },
+              },
+              include: { Round: true },
+            });
+          } else {
+            await prisma.match.update({
+              where: { id: Number(id) },
+              data: {
+                Round: {
+                  create: {
+                    owner_poke_id: pokemon0.id,
+                    opponent_poke_id: pokemon1.id,
+                    turn: turn,
+                    winner_id: winnerId,
+                  },
+                },
+              },
+              include: { Round: true },
+            });
+          }
+        }
+        res.json(newMatch);
       }
     );
   } catch (error) {
