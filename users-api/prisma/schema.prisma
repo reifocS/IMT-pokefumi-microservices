@@ -20,6 +20,7 @@ model User {
   victory  Int
   defeat   Int
   decks    Deck[]
+  admin    Boolean  @default(false)
 }
 
 model Deck {
