@@ -46,6 +46,7 @@ model Invitation {
 }
 enum MatchStatus {
   pending
+  accepted
   started
   finished
 }
