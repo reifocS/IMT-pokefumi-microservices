@@ -132,6 +132,26 @@ app.post("/deck", async (req, res) => {
   const author = (req as any).user.id;
   try {
     const { pokemons } = req.body;
+
+    if (pokemons.length === undefined || pokemons?.length < 1) {
+      throw new Error("There are not enough pokemons in the decks");
+    }
+
+    if (pokemons?.length > 10) {
+      throw new Error("There are too many pokemons in the decks");
+    }
+
+    // eslint-disable-next-line prefer-const
+    let seen = new Set();
+    const hasDuplicates = pokemons?.some((pokemon: { pokeId: unknown }) => {
+      return seen.size === seen.add(pokemon.pokeId).size;
+    });
+    if (hasDuplicates) {
+      throw new Error(
+        "Whenever a player has played a pokemon, he can not reuse it. By this way, pokemons from deck should be unique"
+      );
+    }
+
     const pokeData = pokemons?.map((poke: Prisma.PokemonCreateInput) => {
       return { pokeId: poke.pokeId };
     });
