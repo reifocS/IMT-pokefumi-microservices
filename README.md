@@ -153,6 +153,7 @@ sequenceDiagram
 
 - [Vidéo sur la comparaison d'un proxy et d'un reverse proxy](https://www.youtube.com/watch?v=MpP02aZPSNQ)
 - [Comparaison des méthodes de reverse proxing with nginx](http://sawers.com/blog/reverse-proxying-with-nginx/)
+- [Comprendre le serveur Nginx et les algorithmes de sélection de blocs de localisation](https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms-fr#exemples)
 - [nginx.conf example](https://www.nginx.com/resources/wiki/start/topics/examples/full/)
 
 ### Docker
