@@ -97,7 +97,8 @@ graph LR
     end
 ```
 
-Les bases de données utilisées étaient au départ en local avec *SQLite* mais comme ce type de base de donnée ne supporte pas les enumérations alors que ce projet est réalisé en TypeScript qui supporte cette puissante fonctionnalité, nous avons décidé d'utiliser des bases de données de type pqSQL.
+Les bases de données utilisées étaient au départ en local avec *SQLite* mais comme ce type de base de données ne supporte pas les enumérations alors que ce projet est réalisé en TypeScript qui supporte cette puissante fonctionnalité, nous avons décidé d'utiliser des bases de données de type pqSQL.
+
 ### Sélection du deck pour un match
 
 ```mermaid
