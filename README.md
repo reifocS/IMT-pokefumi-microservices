@@ -35,7 +35,7 @@ Poke-fu-mi est une application qui permet d'organiser des combats entre maîtres
 
 #### 1. Ajout les variables d'environnement
 
-A la racine des dossiers suivants : `users-api` et `match-api` ajouter des fichiers `.env` comportant les informations suivantes : 
+A la racine des dossiers suivants : `users-api` et `match-api` ajouter des fichiers `.env` comportant les informations suivantes :
 
 ```txt
 DATABASE_URL="postgres://User:Password@Host.db.User.com/User?schema=public"
@@ -81,20 +81,25 @@ graph TB
 graph LR
     %%variable
     U((Utilisateur))
+    S_RP{{Reverse Proxy}}
     S_U{{Service des profils<br/><br/>- Login, Logout<br/>- Gestion des decks}}
     D_U[(pgSQL<br/><br/>- Profil<br/>- Deck)]
     S_M{{Service des matchs<br/><br/>- Combat<br/>- Invitation}}
     D_M[(pgSQL<br/><br/>- Match<br/>- Round)]
     S_P[Service Poke-API]
     %%relation
+    U ---> S_RP
     S_U --- D_U
-    U --->|Reverse Proxy| S_U & S_M ---> S_P
+    S_RP <--> S_U & S_M ---> S_P
     S_M --- D_M
     %%structure
-    subgraph Pokefumi
-    S_U
+    subgraph Pokefumi Application
+        subgraph Internal Network        
+        S_RP
+        S_U
+        S_M
+        end
     D_U
-    S_M
     D_M
     end
 ```
@@ -126,7 +131,7 @@ sequenceDiagram
 ## Structure des dossiers
 
 - Le répertoire **users-api** contiendra le microservice pour répondre aux besoins de connexions et de gestion du profil utilisateur.
-- Le répertoire **match-api** contiendra le microservice pour répondre aux besoins des matchs (_e.g._ matchmaking, combat).
+- Le répertoire **match-api** contiendra le microservice pour répondre aux besoins des matchs (*e.g.* matchmaking, combat).
 - Le répertoire **proxy** contiendra les configurations pour le proxy.
 
 ## Connaissances acquises
@@ -171,11 +176,19 @@ L'outils permettant de gérer les configurations de conteneurs le plus utilisé 
 
 #### Ressources utiles
 
-- [Que sont les conteneurs ? | Atlassian](https://www.atlassian.com/fr/continuous-delivery/microservices/containers)
-- [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
-- [Docker Nodejs Tutorial](https://docs.docker.com/language/nodejs/)
-- [Visual Studio Code Remote Development](https://code.visualstudio.com/docs/remote/remote-overview)
-- [Dealing with ports in a Docker](https://linuxhandbook.com/docker-expose-port/)
+- introduction
+  - [Que sont les conteneurs ? | Atlassian](https://www.atlassian.com/fr/continuous-delivery/microservices/containers)
+  - [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+  - [Docker Nodejs Tutorial](https://docs.docker.com/language/nodejs/)
+- réseau
+  - [Dealing with ports in a Docker](https://linuxhandbook.com/docker-expose-port/)
+  - [Docker Compose Network - documentation](https://docs.docker.com/compose/compose-file/compose-file-v3/#networks)
+  - [Understanding Docker Networking Drivers and their use cases](https://www.docker.com/blog/understanding-docker-networking-drivers-use-cases/)
+  - [Docker Compose Network - pratical](https://medium.com/@caysever/docker-compose-network-b86e424fad82)
+  - [Adresse IP : débuter avec le calcul des masques de sous-réseaux](https://youtu.be/qJIXgl0EjtI)
+- debbuging
+  - [Visual Studio Code Remote Development](https://code.visualstudio.com/docs/remote/remote-overview)
+  - [Debugging Node.js Applications in Docker](https://github.com/docker/labs/blob/master/developer-tools/nodejs-debugging)
 
 #### To launch our application in containers
 
@@ -213,7 +226,7 @@ Chaque instruction crée une couche :
 
 - `FROM` pour créer une couche à partir de l'image Docker `node:17.0.1`.
 - `WORKDIR` pour définir le répertoire de travail.
-- `COPY` pour ajouter des fichiers depuis le répertoire courant (répertoire pouvant être défini par le _docker-compose.yml_) dans le dît répertoire de travail du client Docker (les fichiers du _.dockerignore_ ne seront pas copiés).
+- `COPY` pour ajouter des fichiers depuis le répertoire courant (répertoire pouvant être défini par le *docker-compose.yml*) dans le dît répertoire de travail du client Docker (les fichiers du *.dockerignore* ne seront pas copiés).
 - `RUN` pour préparer l'environnement.
 - `CMD` pour spécifier une commande / un script à exécuter dans le conteneur afin de lancer l'image construite.
 - `EXPOSE` pour informer sur quel port l'application écoute.
@@ -231,18 +244,20 @@ docker run --publish 5000:3000/tcp matchs:v1 # permettant d'autoriser le transfe
 
 ```bash
 docker compose build # à faire que si l'on modifie les dockers files
-docker compose up # start et monopolisation du shell (on Ctrl+C avant de relancer le shell)
+docker compose up # start et monopolisation du shell (on Ctrl+C avant de relancer le shell), la monopolisation peut être empêchée avec --detach
 docker compose start # start et rend la main sur le shell après (on peut restart facilement)
 docker compose restart # docker compose stop + docker compose start (nécessaire pour mettre à jour l'architecture docker)
 ```
 
 ##### Autres commandes
 
-| Commands                               | Purposes                                     |
-| -------------------------------------- | -------------------------------------------- |
-| `docker ps`                            | List running containers                      |
-| `docker images`                        | List local images                            |
-| `docker rmi <*ImageName>*`             | Remove an image from local registry          |
-| `docker pull [*ImageName:tag]*`        | Download an image from registry (docker hub) |
-| `docker exec -it <*ContainerId>* bash` | Access running container (command line)      |
-| `docker stop <*ContainerId>*`          | Stop a running container                     |
+| Commands                               | Purposes                                                    |
+| -------------------------------------- | ----------------------------------------------------------- |
+| `docker ps`                            | List running containers                                     |
+| `docker images`                        | List local images                                           |
+| `docker rmi <ImageName>`               | Remove an image from local registry                         |
+| `docker pull [ImageName:tag]`          | Download an image from registry (docker hub)                |
+| `docker exec -it <ContainerId> bash`   | Access running container (command line)                     |
+| `docker stop <ContainerId>`            | Stop a running container                                    |
+| `docker network ls`                    | List all the networks the Engine `daemon` knows about       |
+| `docker network inspect <NetworkName>` | Return information about the selected `NetworkName` network |

@@ -1,21 +1,48 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.9"
+# name: pokefumi
 services:
   user:
+    container_name: users-service
     build: ./users-api
     volumes:
       - ./users-api/src:/users-api/src
+    networks:
+      internal_network:
+        ipv4_address: 172.16.238.2
+    restart: on-failure
   match:
+    container_name: match-service
     build: ./match-api
     volumes:
       - ./match-api/src:/match-api/src
+    networks:
+      internal_network:
+        ipv4_address: 172.16.238.3
+    restart: on-failure
     depends_on:
       - user
   proxy:
-    image: nginx
+    container_name: proxy-service
+    image: nginx:latest
     volumes:
       - ./proxy:/etc/nginx:ro
+    networks:
+      internal_network:
+        ipv4_address: 172.16.238.4
     ports:
       - "8080:8080"
+    restart: on-failure
     depends_on:
       - user
       - match
+networks:
+  internal_network:
+    driver: bridge
+    name: pokefumi_internal_network
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        # /29 cause we need less than (2^(29-32))-2 = 6 hosts by network
+        - subnet: 172.16.238.0/29
+          gateway: 172.16.238.1
