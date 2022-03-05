@@ -7,8 +7,7 @@ services:
     volumes:
       - ./users-api/src:/users-api/src
     networks:
-      internal_network:
-        ipv4_address: 172.16.238.2
+      - internal_network
     restart: on-failure
   match:
     container_name: match-service
@@ -16,8 +15,7 @@ services:
     volumes:
       - ./match-api/src:/match-api/src
     networks:
-      internal_network:
-        ipv4_address: 172.16.238.3
+      - internal_network
     restart: on-failure
     depends_on:
       - user
@@ -27,8 +25,7 @@ services:
     volumes:
       - ./proxy:/etc/nginx:ro
     networks:
-      internal_network:
-        ipv4_address: 172.16.238.4
+      - internal_network
     ports:
       - "8080:8080"
     restart: on-failure
