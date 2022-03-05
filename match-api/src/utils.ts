@@ -8,19 +8,27 @@ import { USERS_API } from "./index";
 const POKE_API = "https://pokeapi.co/api/v2";
 
 // TODO : check if we can rather use the accessToken as a type in itself
-async function getDeck(deckId: number, accessToken: string): Promise<Deck> {
-  const authAxios = axios.create({
-    baseURL: USERS_API,
-    headers: {
-      Cookie: `token=${accessToken}`,
-    },
-  });
-  return new Promise<Deck>((resolve, reject) => {
-    authAxios
-      .get<Deck>(`${USERS_API}/deck/${deckId}/`)
-      .then((response: AxiosResponse<Deck>) => resolve(response.data))
-      .catch((error: AxiosError<string>) => reject(error));
-  });
+async function getDeck(
+  deckId: number,
+  accessToken: string
+): Promise<Deck | undefined> {
+  try {
+    const authAxios = axios.create({
+      baseURL: USERS_API,
+      headers: {
+        Cookie: `token=${accessToken}`,
+      },
+    });
+    return new Promise<Deck>((resolve, reject) => {
+      authAxios
+        .get<Deck>(`${USERS_API}/deck/${deckId}/`)
+        .then((response: AxiosResponse<Deck>) => resolve(response.data))
+        .catch((error: AxiosError<string>) => reject(error));
+    });
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }
 
 /**

@@ -15,7 +15,7 @@ const MATCH_URL = process.env.PROXY_UPSTREAM
   ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_MATCH}`
   : `${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`;
 const USERS_API = process.env.PROXY_UPSTREAM
-  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_USER}`
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_USERS}`
   : `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
 
 const app = express();
@@ -150,7 +150,9 @@ app.put(`/match/:id/selectDeck`, async (req, res) => {
 
       const isOwner: boolean = matchData?.owner_id === userId;
       const prop = isOwner ? "owner_deck_id" : "opponent_deck_id";
-      matchData[prop] = deck?.id;
+      if (deck?.id) {
+        matchData[prop] = deck?.id;
+      }
 
       const result = await prisma.match.update({
         where: { id: Number(id) },
@@ -323,21 +325,25 @@ app.post("/match/:id/round", async (req, res) => {
       where: { match_id: Number(id) },
     });
 
-    const deck0: Promise<Deck> = getDeck(
+    const deck0: Promise<Deck | undefined> = getDeck(
       matchData?.owner_deck_id,
       req.cookies.token
     );
-    const deck1: Promise<Deck> = getDeck(
+    const deck1: Promise<Deck | undefined> = getDeck(
       matchData?.opponent_deck_id,
       req.cookies.token
     );
 
     await Promise.all([deck0, deck1, roundsData]).then(
       async ([deck0, deck1, roundsData]) => {
+        if (deck0 == null || deck1 == null) {
+          throw new Error("At least one of deck has not been found");
+        }
+
         turn += roundsData?.length;
 
         const minDeckSize = Math.min(
-          deck0.pokemons?.length,
+          deck0?.pokemons?.length,
           deck1?.pokemons?.length
         );
         if (minDeckSize < 1) {
