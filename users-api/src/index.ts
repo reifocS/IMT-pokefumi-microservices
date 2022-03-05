@@ -8,10 +8,13 @@ dotenv.config();
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const expressJwt = require("express-jwt");
+const prisma = new PrismaClient();
 
 const POKE_API = "https://pokeapi.co/api/v2/pokemon/";
+const USERS_URL = process.env.PROXY_UPSTREAM
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_USERS}`
+  : `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
 
-const prisma = new PrismaClient();
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -42,7 +45,7 @@ app.use(
 );
 
 app.get("/ping", async (req, res) => {
-  res.json("Hello friend 👨 !");
+  res.json("Hello friend 👨 ! My address is the following : " + USERS_URL);
 });
 
 app.get("/pokemon/:id", async (req, res) => {

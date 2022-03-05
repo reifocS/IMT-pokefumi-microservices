@@ -9,10 +9,16 @@ dotenv.config();
 
 const cookieParser = require("cookie-parser");
 const expressJwt = require("express-jwt");
-
 const prisma = new PrismaClient();
-const app = express();
 
+const MATCH_URL = process.env.PROXY_UPSTREAM
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_MATCH}`
+  : `${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`;
+const USERS_API = process.env.PROXY_UPSTREAM
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_USER}`
+  : `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
+
+const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -42,7 +48,7 @@ app.use(
 );
 
 app.get("/ping", async (req, res) => {
-  res.json("Hello friend 👽 !");
+  res.json("Hello friend 👽 ! My address is the following : " + MATCH_URL);
 });
 
 app.put("/match/join/:id", async (req, res) => {
@@ -462,3 +468,5 @@ app.listen(process.env.MATCH_API_PORT, () => {
     `🪐 Match server ready at: ${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`
   );
 });
+
+export { USERS_API };

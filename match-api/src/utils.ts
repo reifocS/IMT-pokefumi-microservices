@@ -3,9 +3,9 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { Type } from "./models/type";
 import { Damage } from "./models/damage";
 import { Deck } from "./models/deck";
+import { USERS_API } from "./index";
 
 const POKE_API = "https://pokeapi.co/api/v2";
-const USERS_API = `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
 
 // TODO : check if we can rather use the accessToken as a type in itself
 async function getDeck(deckId: number, accessToken: string): Promise<Deck> {
