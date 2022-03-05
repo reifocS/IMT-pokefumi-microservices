@@ -34,9 +34,6 @@ model Round {
   Match            Match? @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-
-
-
 model Invitation {
   id           Int   @id @default(autoincrement())
   user_id      Int
@@ -44,8 +41,10 @@ model Invitation {
   Match        Match? @relation(fields: [match_id], references: [id])
   resolved     Boolean?
 }
+
 enum MatchStatus {
   pending
+  accepted
   started
   finished
 }

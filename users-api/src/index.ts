@@ -8,10 +8,13 @@ dotenv.config();
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const expressJwt = require("express-jwt");
+const prisma = new PrismaClient();
 
 const POKE_API = "https://pokeapi.co/api/v2/pokemon/";
+const USERS_URL = process.env.PROXY_UPSTREAM
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_USERS}`
+  : `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
 
-const prisma = new PrismaClient();
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -42,7 +45,7 @@ app.use(
 );
 
 app.get("/ping", async (req, res) => {
-  res.json("Hello friend 👨 !");
+  res.json("Hello friend 👨 ! My address is the following : " + USERS_URL);
 });
 
 app.get("/pokemon/:id", async (req, res) => {
@@ -52,6 +55,7 @@ app.get("/pokemon/:id", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
+  // const admin = !!req.body.admin;
   try {
     const result = await prisma.user.create({
       data: {
@@ -131,6 +135,26 @@ app.post("/deck", async (req, res) => {
   const author = (req as any).user.id;
   try {
     const { pokemons } = req.body;
+
+    if (pokemons.length === undefined || pokemons?.length < 1) {
+      throw new Error("There are not enough pokemons in the decks");
+    }
+
+    if (pokemons?.length > 10) {
+      throw new Error("There are too many pokemons in the decks");
+    }
+
+    // eslint-disable-next-line prefer-const
+    let seen = new Set();
+    const hasDuplicates = pokemons?.some((pokemon: { pokeId: unknown }) => {
+      return seen.size === seen.add(pokemon.pokeId).size;
+    });
+    if (hasDuplicates) {
+      throw new Error(
+        "Whenever a player has played a pokemon, he can not reuse it. By this way, pokemons from deck should be unique"
+      );
+    }
+
     const pokeData = pokemons?.map((poke: Prisma.PokemonCreateInput) => {
       return { pokeId: poke.pokeId };
     });

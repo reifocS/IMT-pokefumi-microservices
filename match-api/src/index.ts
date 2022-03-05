@@ -1,4 +1,4 @@
-import { PrismaClient, MatchStatus } from "@prisma/client";
+import { PrismaClient, MatchStatus, Match, Round } from "@prisma/client";
 import { getStronger, getPokemonById, getDeck } from "./utils";
 import express from "express";
 import bodyParser from "body-parser";
@@ -9,10 +9,16 @@ dotenv.config();
 
 const cookieParser = require("cookie-parser");
 const expressJwt = require("express-jwt");
-
 const prisma = new PrismaClient();
-const app = express();
 
+const MATCH_URL = process.env.PROXY_UPSTREAM
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_MATCH}`
+  : `${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`;
+const USERS_API = process.env.PROXY_UPSTREAM
+  ? `${process.env.PROXY_UPSTREAM}:${process.env.PROXY_PORT}${process.env.PROXY_PATH_USERS}`
+  : `${process.env.USERS_API_BASE_URL}:${process.env.USERS_API_PORT}`;
+
+const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -42,7 +48,7 @@ app.use(
 );
 
 app.get("/ping", async (req, res) => {
-  res.json("Hello friend 👽 !");
+  res.json("Hello friend 👽 ! My address is the following : " + MATCH_URL);
 });
 
 app.put("/match/join/:id", async (req, res) => {
@@ -78,7 +84,7 @@ app.put("/match/join/:id", async (req, res) => {
       where: { id: Number(id) || undefined },
       data: {
         opponent_id: user.id,
-        status: "started",
+        status: MatchStatus.accepted,
       },
     });
     if (matchData.Invitation) {
@@ -101,11 +107,10 @@ app.post(`/match`, async (req, res) => {
   // const { opponentId, ownerDeckId, opponentDeckId, Invitation } = req.body;
   const { opponentId, Invitation } = req.body;
   const author = (req as any).user;
-  const status: MatchStatus = "pending";
   try {
     const result = await prisma.match.create({
       data: {
-        status: status,
+        status: MatchStatus.pending,
         owner_id: author.id,
         opponent_id: opponentId,
         // owner_deck_id: ownerDeckId,
@@ -145,7 +150,9 @@ app.put(`/match/:id/selectDeck`, async (req, res) => {
 
       const isOwner: boolean = matchData?.owner_id === userId;
       const prop = isOwner ? "owner_deck_id" : "opponent_deck_id";
-      matchData[prop] = deck?.id;
+      if (deck?.id) {
+        matchData[prop] = deck?.id;
+      }
 
       const result = await prisma.match.update({
         where: { id: Number(id) },
@@ -233,7 +240,11 @@ app.get("/matchs/:userId", async (req, res) => {
 
 app.delete("/match/:id", async (req, res) => {
   const { id } = req.params;
+  const user = (req as any).user;
   try {
+    if (!user.admin) {
+      return res.status(403).send("not admin");
+    }
     await prisma.match.delete({
       where: { id: Number(id) },
     });
@@ -276,13 +287,22 @@ app.get("/match/:id/rounds", async (req, res) => {
   }
 });
 
-app.post("/match/:id/rounds", async (req, res) => {
+/**
+ * @link https://www.prisma.io/docs/guides/general-guides/database-workflows/foreign-keys/postgresql#6-validate-the-foreign-key-constraints-in-a-nodejs-script
+ * @link https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-scalar-lists-arrays#adding-items-to-a-scalar-list
+ * @returns the current state of the match
+ */
+app.post("/match/:id/round", async (req, res) => {
   const { id } = req.params;
 
   try {
     const matchData = await prisma.match.findUnique({
       where: { id: Number(id) },
     });
+
+    if (matchData?.status === MatchStatus.finished) {
+      throw new Error("As the match is finished, no more rounds are allowed");
+    }
 
     if (matchData?.owner_id == null || matchData?.opponent_id == null) {
       throw new Error("At least two players are required");
@@ -300,26 +320,36 @@ app.post("/match/:id/rounds", async (req, res) => {
       throw new Error("At least one of the players has not created a deck");
     }
 
-    // TODO : is it better to ask to the Round table from match ? or to all Rounds ? orm ?
     let turn = 1;
     const roundsData = prisma.round.findMany({
       where: { match_id: Number(id) },
     });
 
-    const deck0: Promise<Deck> = getDeck(
+    const deck0: Promise<Deck | undefined> = getDeck(
       matchData?.owner_deck_id,
       req.cookies.token
     );
-    const deck1: Promise<Deck> = getDeck(
+    const deck1: Promise<Deck | undefined> = getDeck(
       matchData?.opponent_deck_id,
       req.cookies.token
     );
 
-    Promise.all([deck0, deck1, roundsData]).then(
+    await Promise.all([deck0, deck1, roundsData]).then(
       async ([deck0, deck1, roundsData]) => {
+        if (deck0 == null || deck1 == null) {
+          throw new Error("At least one of deck has not been found");
+        }
+
         turn += roundsData?.length;
 
-        if (Math.min(deck0.pokemons?.length, deck1?.pokemons?.length) < turn) {
+        const minDeckSize = Math.min(
+          deck0?.pokemons?.length,
+          deck1?.pokemons?.length
+        );
+        if (minDeckSize < 1) {
+          throw new Error("At least one of the players has not created a deck");
+        }
+        if (minDeckSize < turn) {
           throw new Error(
             "At least one of the players has not enough cards in its deck to play the round"
           );
@@ -338,22 +368,58 @@ app.post("/match/:id/rounds", async (req, res) => {
           }
         }
 
-        const newRound = await prisma.round.create({
-          data: {
-            Match: { connect: { id: matchData?.id } },
-            owner_poke_id: pokemon0.id,
-            opponent_poke_id: pokemon1.id,
-            turn: turn,
-            winner_id: winnerId,
-          },
-        });
-        res.json(newRound);
-        // TODO : redundancy ?
-        // const newMatchData = matchData?.Round.push(newRound);
-        // prisma.match.update({
-        //   where: { id: Number(id) || undefined },
-        //   data: newMatchData,
-        // });
+        let newMatch: (Match & { Round: Round[] }) | undefined;
+        if (minDeckSize === turn) {
+          newMatch = await prisma.match.update({
+            where: { id: Number(id) },
+            data: {
+              status: MatchStatus.finished,
+              Round: {
+                create: {
+                  owner_poke_id: pokemon0.id,
+                  opponent_poke_id: pokemon1.id,
+                  turn: turn,
+                  winner_id: winnerId,
+                },
+              },
+            },
+            include: { Round: true },
+          });
+        } else {
+          if (turn < 2) {
+            await prisma.match.update({
+              where: { id: Number(id) },
+              data: {
+                status: MatchStatus.started,
+                Round: {
+                  create: {
+                    owner_poke_id: pokemon0.id,
+                    opponent_poke_id: pokemon1.id,
+                    turn: turn,
+                    winner_id: winnerId,
+                  },
+                },
+              },
+              include: { Round: true },
+            });
+          } else {
+            await prisma.match.update({
+              where: { id: Number(id) },
+              data: {
+                Round: {
+                  create: {
+                    owner_poke_id: pokemon0.id,
+                    opponent_poke_id: pokemon1.id,
+                    turn: turn,
+                    winner_id: winnerId,
+                  },
+                },
+              },
+              include: { Round: true },
+            });
+          }
+        }
+        res.json(newMatch);
       }
     );
   } catch (error) {
@@ -408,3 +474,5 @@ app.listen(process.env.MATCH_API_PORT, () => {
     `🪐 Match server ready at: ${process.env.MATCH_API_BASE_URL}:${process.env.MATCH_API_PORT}`
   );
 });
+
+export { USERS_API };
